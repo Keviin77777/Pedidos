@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         hostname: 'dnscine.top',
         port: '80',
         pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'gstaticontent.com',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
