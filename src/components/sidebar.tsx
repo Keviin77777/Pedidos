@@ -3,13 +3,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Clapperboard, Film, Home, Tv } from 'lucide-react';
+import { Clapperboard, Home, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: 'Início', icon: Home },
-  { href: '/movies', label: 'Filmes', icon: Film },
-  { href: '/series', label: 'Séries', icon: Tv },
+  { href: '/', label: 'Solicitação de Conteudos', icon: Home },
+  { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
 ];
 
 const Sidebar = () => {
