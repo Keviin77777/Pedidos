@@ -41,6 +41,7 @@ export default function Home() {
     saveContentRequest({
       title: item.name,
       type: item.category,
+      logo: item.logo,
     });
     toast({
       title: 'Pedido Enviado!',

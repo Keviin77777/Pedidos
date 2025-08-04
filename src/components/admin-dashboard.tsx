@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ interface ContentRequest {
   id: string;
   title: string;
   type: string;
+  logo?: string | null;
   notes?: string;
   requestedAt: string;
   status: 'Pendente' | 'Adicionado';
@@ -105,8 +107,22 @@ export default function AdminDashboard() {
                     {requests.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
-                            <div className="font-medium">{req.title}</div>
-                            {req.notes && <div className="hidden text-sm text-muted-foreground md:inline">Obs: {req.notes}</div>}
+                            <div className="flex items-center gap-4">
+                               <div className="w-24 h-14 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                                  <Image
+                                      src={req.logo || 'https://placehold.co/150x100.png'}
+                                      alt={`Capa de ${req.title}`}
+                                      fill
+                                      className="object-cover"
+                                      sizes="100px"
+                                      data-ai-hint="movie poster"
+                                  />
+                               </div>
+                               <div>
+                                 <div className="font-medium">{req.title}</div>
+                                 {req.notes && <div className="text-sm text-muted-foreground">Obs: {req.notes}</div>}
+                               </div>
+                            </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">{req.type}</TableCell>
                         <TableCell className="hidden md:table-cell">

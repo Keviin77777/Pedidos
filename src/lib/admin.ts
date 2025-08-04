@@ -7,6 +7,7 @@ interface ContentRequest {
   id: string;
   title: string;
   type: string;
+  logo?: string | null;
   notes?: string;
   requestedAt: string;
   status: 'Pendente' | 'Adicionado';

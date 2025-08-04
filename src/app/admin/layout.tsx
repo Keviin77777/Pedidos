@@ -1,10 +1,7 @@
 
-import { Inter } from 'next/font/google';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata = {
   title: 'CineAssist - Admin',
@@ -17,13 +14,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} dark h-full`}>
-      <body className="font-body antialiased h-full">
+      <div className="dark h-full">
         <main className="h-full bg-background text-foreground">
           {children}
         </main>
         <Toaster />
-      </body>
-    </html>
+      </div>
   );
 }
