@@ -90,8 +90,8 @@ export const onProblemReportsUpdated = (
 
 // ======== CONTENT REQUESTS ========
 
-export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'requestedAt' | 'status'>): Promise<void> => {
-  const newRequest: FirebaseContentRequest = {
+export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'requestedAt' | 'status' | 'addedToCategory'>): Promise<void> => {
+  const newRequest: Omit<FirebaseContentRequest, 'id'> = {
     ...request,
     requestedAt: Timestamp.now(),
     status: 'Pendente',

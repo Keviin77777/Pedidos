@@ -231,7 +231,7 @@ export default function Home() {
           </div>
 
           <div className="pt-8">
-            {isLoading && !searchPerformed && (
+            {isLoading && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                  {Array.from({ length: 6 }).map((_, index) => (
                     <ContentCardSkeleton key={`skeleton-search-${index}`} />
@@ -239,7 +239,7 @@ export default function Home() {
               </div>
             )}
             
-            {searchPerformed && (
+            {searchPerformed && !isLoading && (
               <>
                 {results.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
@@ -251,7 +251,7 @@ export default function Home() {
                            <ContentCard item={item} showCategory={item.status !== 'existing'} />
                            {item.status === 'requestable' ? (
                               <Button 
-                                 className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
+                                 className="w-full" 
                                  onClick={() => handleRequest(item)}
                               >
                                  Solicitar
@@ -272,7 +272,7 @@ export default function Home() {
                     ))}
                   </div>
                 ) : (
-                   searchQuery.length > 2 && !isLoading && (
+                   searchQuery.length > 2 && (
                     <Card className="text-center py-10 px-6 border-dashed bg-card">
                       <CardContent>
                         <h3 className="text-xl font-semibold text-card-foreground mb-2">

@@ -33,6 +33,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MarkAsAddedDialog } from './mark-as-added-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<ContentRequest[]>([]);
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell>
                         <Badge 
-                          variant={req.status === 'Pendente' ? 'destructive' : 'secondary'}
+                          variant={req.status === 'Pendente' ? 'destructive' : req.status === 'Adicionado' ? 'default' : 'secondary'}
                         >
                           {req.status}
                         </Badge>
@@ -212,20 +213,38 @@ export default function AdminDashboard() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <MarkAsAddedDialog requestId={req.id} requestTitle={req.title}>
-                                <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                                   Marcar como Adicionado
                                 </div>
                               </MarkAsAddedDialog>
-                              <DropdownMenuItem onClick={() => handleSetToPending(req.id)}>
-                                Marcar como Pendente
-                              </DropdownMenuItem>
+                              {req.status !== 'Pendente' && (
+                                <DropdownMenuItem onClick={() => handleSetToPending(req.id)}>
+                                  Marcar como Pendente
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                                onClick={() => handleRequestDelete(req.id)}
-                              >
-                                Remover Pedido
-                              </DropdownMenuItem>
+                               <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-destructive/10 focus:text-destructive data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                    Remover Pedido
+                                  </div>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Essa ação não pode ser desfeita. Isso removerá permanentemente o pedido de
+                                        "{req.title}" do banco de dados.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleRequestDelete(req.id)}>
+                                        Confirmar
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </DropdownMenuContent>
                           </DropdownMenu>
                       </TableCell>
