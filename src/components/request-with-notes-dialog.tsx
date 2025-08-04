@@ -81,7 +81,7 @@ export function RequestWithNotesDialog({ item, children }: RequestWithNotesDialo
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="col-span-3 min-h-[120px]"
-                placeholder="Ex: Áudio em inglês com legenda, versão 4K, etc."
+                placeholder="Ex: Áudio em inglês com legenda, versão do diretor, etc."
                 disabled={isSubmitting}
               />
             </div>
