@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import ContentCard from '@/components/content-card';
 import { Card, CardContent } from '@/components/ui/card';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { CorrectionDialog } from '@/components/correction-dialog';
-import { M3uContext } from '@/contexts/M3uContext';
+import { getM3UItems } from '@/lib/m3u';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -21,9 +21,18 @@ interface EnrichedM3UItem extends M3UItem {
 
 export default function CorrectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { m3uItems, isLoading } = useContext(M3uContext);
+  const [isLoading, setIsLoading] = useState(false);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
+  const [m3uItemsCache, setM3uItemsCache] = useState<M3UItem[]>([]);
+  const [isCacheLoading, setIsCacheLoading] = useState(true);
 
+  // Load the M3U cache once on component mount
+  useEffect(() => {
+    getM3UItems().then(items => {
+      setM3uItemsCache(items);
+      setIsCacheLoading(false);
+    });
+  }, []);
 
   const normalizeTitle = (title: string): string => {
     return title
@@ -70,22 +79,22 @@ export default function CorrectionPage() {
   };
 
 
-  useEffect(() => {
-    if (isLoading) return;
-
-    const normalizedQuery = normalizeTitle(searchQuery);
-
-    if (searchQuery.trim().length < 3) {
+  const performSearch = useCallback(async (query: string) => {
+    if (isCacheLoading || query.trim().length < 3) {
       setFilteredItems([]);
       return;
     }
+    
+    setIsLoading(true);
+    const normalizedQuery = normalizeTitle(query);
 
-    const filtered = m3uItems.filter(item => 
+    const filtered = m3uItemsCache.filter(item => 
       normalizeTitle(item.name).includes(normalizedQuery)
     );
 
     const enriched: EnrichedM3UItem[] = filtered.map(item => ({...item, status: 'loading'}));
     setFilteredItems(enriched);
+    setIsLoading(false);
 
     enriched.forEach(async (item) => {
         try {
@@ -114,7 +123,15 @@ export default function CorrectionPage() {
         }
     });
 
-  }, [searchQuery, m3uItems, isLoading]);
+  }, [m3uItemsCache, isCacheLoading]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, performSearch]);
 
 
   return (
@@ -135,9 +152,9 @@ export default function CorrectionPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
-                disabled={isLoading}
+                disabled={isCacheLoading}
               />
-               {isLoading && (
+               {(isLoading || isCacheLoading) && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                 </div>

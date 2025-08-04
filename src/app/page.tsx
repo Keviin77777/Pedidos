@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useTransition } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,8 @@ import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { M3uContext } from '@/contexts/M3uContext';
+import { getM3UItems } from '@/lib/m3u';
+
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -32,7 +33,6 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
 
-  const { m3uItems: m3uItemsCache, isLoading: isCacheLoading } = useContext(M3uContext);
   const { toast } = useToast();
 
   const handleRequest = (item: M3UItem) => {
@@ -101,18 +101,17 @@ export default function Home() {
     setSearchPerformed(true);
 
     try {
-      const tmdbResults = await searchTmdb(query, type);
+      // Fetch TMDB and M3U in parallel
+      const [tmdbResults, m3uItemsCache] = await Promise.all([
+        searchTmdb(query, type),
+        getM3UItems() 
+      ]);
       
       if (tmdbResults.length === 0) {
         setResults([]);
-        setSearchPerformed(true);
         setIsLoading(false);
         return;
       }
-
-      const initialResults: SearchResult[] = tmdbResults.map(item => ({...item, status: 'loading'}));
-      setResults(initialResults);
-      setIsLoading(false);
 
       const normalizedM3uMap = new Map<string, M3UItem>();
       m3uItemsCache.forEach(item => {
@@ -146,16 +145,15 @@ export default function Home() {
     } finally {
         setIsLoading(false);
     }
-  }, [toast, m3uItemsCache, requestedItems]);
+  }, [toast, requestedItems]);
 
   useEffect(() => {
-    if (isCacheLoading) return;
     const delayDebounceFn = setTimeout(() => {
       handleSearch(searchQuery, searchType);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, searchType, handleSearch, isCacheLoading]);
+  }, [searchQuery, searchType, handleSearch]);
 
 
   return (
@@ -184,9 +182,8 @@ export default function Home() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
-                disabled={isCacheLoading}
               />
-               {isCacheLoading && (
+               {isLoading && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                 </div>
@@ -196,7 +193,7 @@ export default function Home() {
           </div>
 
           <div className="pt-8">
-            {isLoading && (
+            {isLoading && !searchPerformed && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                  {Array.from({ length: 6 }).map((_, index) => (
                     <ContentCardSkeleton key={`skeleton-search-${index}`} />
@@ -204,7 +201,7 @@ export default function Home() {
               </div>
             )}
             
-            {searchPerformed && !isLoading && (
+            {searchPerformed && (
               <>
                 {results.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
