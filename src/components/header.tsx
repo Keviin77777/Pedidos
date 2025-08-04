@@ -1,10 +1,21 @@
 
+'use client';
 
-const Header = () => {
+import { Menu } from 'lucide-react';
+import { Button } from './ui/button';
+
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+const Header = ({ onMenuClick }: HeaderProps) => {
   return (
-    <header className="bg-card/30 backdrop-blur-lg border-b sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-4 flex items-center">
-        {/* Content can be added here later if needed */}
+    <header className="bg-card/30 backdrop-blur-lg border-b sticky top-0 z-10 lg:hidden">
+      <div className="container mx-auto px-4 h-16 flex items-center">
+        <Button variant="ghost" size="icon" onClick={onMenuClick} className="mr-4">
+           <Menu className="h-6 w-6" />
+           <span className="sr-only">Abrir Menu</span>
+        </Button>
       </div>
     </header>
   );

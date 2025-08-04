@@ -1,24 +1,43 @@
 
 'use client';
 
+import { useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import { M3uProvider } from '@/contexts/M3uContext';
 import LoadingOverlay from '@/components/loading-overlay';
 import { Toaster } from '@/components/ui/toaster';
+import Header from '@/components/header';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 export default function MainAppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
       <M3uProvider>
         <LoadingOverlay />
-        <div className="flex h-full bg-background text-foreground">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
+        <div className="flex h-screen bg-background text-foreground">
+           {/* Desktop Sidebar */}
+           <div className="hidden lg:flex lg:flex-shrink-0">
+             <Sidebar />
+           </div>
+
+           {/* Mobile Sidebar */}
+           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+             <SheetContent side="left" className="p-0 w-64">
+                <Sidebar />
+             </SheetContent>
+           </Sheet>
+          
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <Header onMenuClick={() => setSidebarOpen(true)} />
+            <main className="flex-1 overflow-y-auto">
+                {children}
+            </main>
+          </div>
         </div>
         <Toaster />
       </M3uProvider>

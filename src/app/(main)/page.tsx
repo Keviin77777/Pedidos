@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
-import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
 import { Search, Sparkles } from 'lucide-react';
 import ContentCard from '@/components/content-card';
@@ -172,11 +171,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <Header />
       <div className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
             <p className="text-muted-foreground">Não encontrou o que procurava? Verifique aqui e faça seu pedido.</p>
           </div>
           <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-4">
@@ -209,7 +207,7 @@ export default function Home() {
 
           <div className="pt-8">
             {isLoading && !searchPerformed && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                  {Array.from({ length: 6 }).map((_, index) => (
                     <ContentCardSkeleton key={`skeleton-search-${index}`} />
                  ))}
@@ -219,7 +217,7 @@ export default function Home() {
             {searchPerformed && (
               <>
                 {results.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                     {results.map((item, index) => (
                        item.status === 'loading' ? (
                           <ContentCardSkeleton key={`skeleton-${index}`} />
@@ -277,7 +275,7 @@ export default function Home() {
                 </AccordionTrigger>
                 <AccordionContent className="pt-6">
                   {addedItems.length > 0 ? (
-                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                        {addedItems.map((item) => (
                          <div key={item.id} className="flex flex-col gap-2 items-center">
                             <ContentCard item={{

@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
-import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import ContentCard from '@/components/content-card';
@@ -128,11 +127,10 @@ export default function CorrectionPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <Header />
       <div className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-primary">Corrigir um Conteúdo</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">Corrigir um Conteúdo</h2>
             <p className="text-muted-foreground">Encontrou um problema? Busque o conteúdo e nos informe.</p>
           </div>
           <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-2">
@@ -156,7 +154,7 @@ export default function CorrectionPage() {
 
           <div className="pt-8">
             {searchQuery.length > 2 && filteredItems.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                 {filteredItems.map((item, index) => (
                    item.status === 'loading' ? (
                       <ContentCardSkeleton key={`skeleton-${index}`} />
