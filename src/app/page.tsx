@@ -14,7 +14,7 @@ import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -26,6 +26,7 @@ interface SearchResult extends M3UItem {
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('multi');
   const [isLoading, setIsLoading] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -77,10 +78,10 @@ export default function Home() {
       .trim();
   };
   
-  const searchTmdb = async (title: string): Promise<M3UItem[]> => {
+  const searchTmdb = async (query: string, type: string): Promise<M3UItem[]> => {
     try {
-      const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-        title
+      const searchUrl = `https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+        query
       )}&language=pt-BR`;
       const response = await fetch(searchUrl);
 
@@ -93,12 +94,12 @@ export default function Home() {
 
       if (data.results && data.results.length > 0) {
         return data.results
-          .filter((res: any) => (res.media_type === 'movie' || res.media_type === 'tv') && res.poster_path)
+          .filter((res: any) => ((res.media_type === 'movie' || res.media_type === 'tv') || type === 'movie' || type === 'tv') && res.poster_path)
           .map((res: any) => ({
             name: res.title || res.name,
             synopsis: res.overview || 'Nenhuma sinopse disponível.',
             logo: res.poster_path ? `${TMDB_IMAGE_BASE_URL}${res.poster_path}` : null,
-            category: res.media_type === 'tv' ? 'Série' : 'Filme',
+            category: res.media_type === 'tv' || type === 'tv' ? 'Série' : 'Filme',
             url: '',
           }));
       }
@@ -110,7 +111,7 @@ export default function Home() {
   };
 
 
-  const handleSearch = useCallback(async (query: string) => {
+  const handleSearch = useCallback(async (query: string, type: string) => {
     if (query.trim().length < 3) {
       setResults([]);
       setSearchPerformed(false);
@@ -121,7 +122,7 @@ export default function Home() {
     setSearchPerformed(true);
 
     try {
-      const tmdbResults = await searchTmdb(query);
+      const tmdbResults = await searchTmdb(query, type);
       
       if (tmdbResults.length === 0) {
         setResults([]);
@@ -170,11 +171,11 @@ export default function Home() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      handleSearch(searchQuery);
+      handleSearch(searchQuery, searchType);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery, searchType, handleSearch]);
 
 
   return (
@@ -186,12 +187,20 @@ export default function Home() {
             <h2 className="text-2xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
             <p className="text-muted-foreground">Não encontrou o que procurava? Verifique aqui e faça seu pedido.</p>
           </div>
-          <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-2">
+          <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-4">
+             <Tabs value={searchType} onValueChange={setSearchType}>
+                <TabsList>
+                    <TabsTrigger value="multi">Todos</TabsTrigger>
+                    <TabsTrigger value="movie">Filmes</TabsTrigger>
+                    <TabsTrigger value="tv">Séries</TabsTrigger>
+                </TabsList>
+             </Tabs>
+
             <div className="relative w-full flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Digite o nome do filme ou série..."
+                placeholder={`Digite o nome d${searchType === 'tv' ? 'a série' : 'o filme'}...`}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
@@ -238,7 +247,7 @@ export default function Home() {
                            ) : (
                               <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
                                 <p className="font-bold">Já está no sistema</p>
-                                <p className="truncate">em: {item.existingCategory}</p>
+                                {item.existingCategory && <p className="truncate">em: {item.existingCategory}</p>}
                               </div>
                            )}
                          </div>
@@ -269,4 +278,4 @@ export default function Home() {
       </footer>
     </div>
   );
-}
+ 
