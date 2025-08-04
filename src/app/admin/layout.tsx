@@ -18,8 +18,10 @@ export default function AdminLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} dark h-full`}>
-      <body className="font-body antialiased h-full bg-background text-foreground">
-        {children}
+      <body className="font-body antialiased h-full">
+        <main className="h-full bg-background text-foreground">
+          {children}
+        </main>
         <Toaster />
       </body>
     </html>
