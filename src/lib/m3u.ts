@@ -8,11 +8,12 @@ const API_URL = process.env.XUI_API_URL;
 const USERNAME = process.env.XUI_USERNAME;
 const PASSWORD = process.env.XUI_PASSWORD;
 
-interface XuiOneVodInfo {
+interface XuiOneContent {
   name: string;
   stream_icon?: string;
   category_id?: string;
-  // Other properties from the API can be added here if needed
+  // series_id is specific to series endpoint
+  series_id?: number;
 }
 
 interface XuiOneCategory {
@@ -22,7 +23,7 @@ interface XuiOneCategory {
 }
 
 
-// This function fetches all VOD content (movies and series) from the XUI One API
+// This function fetches all VOD and Series content from the XUI One API
 export async function getM3UItems(): Promise<M3UItem[]> {
   if (!API_URL || !USERNAME || !PASSWORD) {
     console.error('XUI One API URL or credentials are not configured in environment variables.');
@@ -30,67 +31,83 @@ export async function getM3UItems(): Promise<M3UItem[]> {
   }
 
   try {
-    // Construct the API URL for fetching VOD streams
-    const apiUrl = `${API_URL}/player_api.php?username=${USERNAME}&password=${PASSWORD}&action=get_vod_streams`;
+    const baseUrl = `${API_URL}/player_api.php?username=${USERNAME}&password=${PASSWORD}`;
     
-    // Fetch categories in parallel to map category IDs to names
-    const categoriesUrl = `${API_URL}/player_api.php?username=${USERNAME}&password=${PASSWORD}&action=get_vod_categories`;
-    
-    const [vodResponse, categoriesResponse] = await Promise.all([
-      fetch(apiUrl, { next: { revalidate: 600 } }), // Cache for 10 minutes
-      fetch(categoriesUrl, { next: { revalidate: 600 } })
+    // Define all API endpoints to be called
+    const endpoints = {
+        vod: `${baseUrl}&action=get_vod_streams`,
+        series: `${baseUrl}&action=get_series`,
+        vodCategories: `${baseUrl}&action=get_vod_categories`,
+        seriesCategories: `${baseUrl}&action=get_series_categories`,
+    };
+
+    // Fetch all data in parallel for maximum efficiency
+    const [
+        vodResponse, 
+        seriesResponse, 
+        vodCategoriesResponse, 
+        seriesCategoriesResponse
+    ] = await Promise.all([
+      fetch(endpoints.vod, { next: { revalidate: 600 } }), // Cache for 10 minutes
+      fetch(endpoints.series, { next: { revalidate: 600 } }),
+      fetch(endpoints.vodCategories, { next: { revalidate: 600 } }),
+      fetch(endpoints.seriesCategories, { next: { revalidate: 600 } })
     ]);
 
+    // Helper to process response and parse JSON
+    const processResponse = async (response: Response, name: string) => {
+        if (!response.ok) {
+            console.error(`Failed to fetch ${name} from XUI One API:`, response.statusText);
+            return [];
+        }
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            console.error(`${name} API did not return an array.`);
+            return [];
+        }
+        return data;
+    };
 
-    if (!vodResponse.ok) {
-      console.error('Failed to fetch VOD streams from XUI One API:', vodResponse.statusText);
-      return [];
-    }
-     if (!categoriesResponse.ok) {
-      console.error('Failed to fetch categories from XUI One API:', categoriesResponse.statusText);
-      return [];
-    }
+    const vodData: XuiOneContent[] = await processResponse(vodResponse, 'VOD streams');
+    const seriesData: XuiOneContent[] = await processResponse(seriesResponse, 'Series');
+    const vodCategoryData: XuiOneCategory[] = await processResponse(vodCategoriesResponse, 'VOD categories');
+    const seriesCategoryData: XuiOneCategory[] = await processResponse(seriesCategoriesResponse, 'Series categories');
 
-    const vodData: XuiOneVodInfo[] | { user_info?: any, server_info?: any } = await vodResponse.json();
-    const categoryData: XuiOneCategory[] = await categoriesResponse.json();
+    // Create maps for quick category lookup
+    const vodCategoryMap = new Map<string, string>();
+    vodCategoryData.forEach(cat => vodCategoryMap.set(cat.category_id, cat.category_name));
+    
+    const seriesCategoryMap = new Map<string, string>();
+    seriesCategoryData.forEach(cat => seriesCategoryMap.set(cat.category_id, cat.category_name));
 
-    if (!Array.isArray(vodData)) {
-      console.error("VOD API did not return an array. It might have returned an auth object instead.");
-      return [];
-    }
-     if (!Array.isArray(categoryData)) {
-      console.error("Categories API did not return an array.");
-      return [];
-    }
+    // Process VOD items
+    const movieItems: M3UItem[] = vodData.map((item: XuiOneContent) => {
+      const categoryName = item.category_id ? vodCategoryMap.get(item.category_id) : 'Filme';
+      return {
+        name: item.name,
+        logo: item.stream_icon || null,
+        category: categoryName || 'Filme',
+        url: '', // Not needed for checking existence
+        synopsis: '', // To be fetched from TMDB
+      };
+    });
 
-    // Create a map for quick category lookup
-    const categoryMap = new Map<string, string>();
-    categoryData.forEach(cat => {
-      categoryMap.set(cat.category_id, cat.category_name);
+    // Process Series items
+    const seriesItems: M3UItem[] = seriesData.map((item: XuiOneContent) => {
+      const categoryName = item.category_id ? seriesCategoryMap.get(item.category_id) : 'Série';
+      return {
+        name: item.name,
+        logo: item.stream_icon || null,
+        category: categoryName || 'Série',
+        url: '',
+        synopsis: '',
+      };
     });
     
-    // Filter out any items that are not movies or series, if necessary
-    // This example assumes all VOD items are relevant
-    const items: M3UItem[] = vodData
-      .map((item: XuiOneVodInfo) => {
-        const categoryName = item.category_id ? categoryMap.get(item.category_id) : 'Desconhecida';
-        
-        // Exclude live channels if they appear in the VOD list
-        if (categoryName && (categoryName.toLowerCase().includes('canais') || categoryName.toLowerCase().includes('live'))) {
-          return null;
-        }
-
-        return {
-          name: item.name,
-          logo: item.stream_icon || null,
-          category: categoryName || 'Desconhecida',
-          url: '', // URL is not needed for checking existence
-          synopsis: '', // Synopsis will be fetched from TMDB
-        };
-      })
-      .filter((item): item is M3UItem => item !== null); // Filter out the null items
+    // Combine both lists and return
+    const allItems = [...movieItems, ...seriesItems];
       
-    return items;
+    return allItems;
 
   } catch (error) {
     console.error('Error fetching or parsing data from XUI One API:', error);
