@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -8,9 +9,10 @@ import { ScrollArea } from './ui/scroll-area';
 
 interface ContentCardProps {
   item: M3UItem;
+  showCategory?: boolean;
 }
 
-export default function ContentCard({ item }: ContentCardProps) {
+export default function ContentCard({ item, showCategory = true }: ContentCardProps) {
   return (
     <Card className="flex flex-col h-full overflow-hidden transition-all duration-300">
       <CardHeader className="p-0">
@@ -33,7 +35,7 @@ export default function ContentCard({ item }: ContentCardProps) {
            <p className="text-sm text-muted-foreground">{item.synopsis || 'No synopsis available.'}</p>
         </ScrollArea>
       </CardContent>
-       {item.category && (
+       {showCategory && item.category && (
         <CardFooter className="p-4 pt-0">
           <Badge variant="secondary" className="truncate">{item.category}</Badge>
         </CardFooter>
@@ -41,3 +43,5 @@ export default function ContentCard({ item }: ContentCardProps) {
     </Card>
   );
 }
+
+    

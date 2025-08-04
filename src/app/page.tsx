@@ -14,12 +14,14 @@ import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface SearchResult extends M3UItem {
   status: 'existing' | 'requestable' | 'loading' | 'requested';
+  existingCategory?: string;
 }
 
 export default function Home() {
@@ -132,18 +134,21 @@ export default function Home() {
       setResults(initialResults);
       setIsLoading(false);
 
-      const normalizedM3uTitles = new Set(m3uItemsCache.map(item => normalizeTitle(item.name)));
+      const normalizedM3uMap = new Map<string, M3UItem>();
+      m3uItemsCache.forEach(item => {
+        normalizedM3uMap.set(normalizeTitle(item.name), item);
+      });
 
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
-        const isExisting = normalizedM3uTitles.has(normalizedTmdbTitle);
+        const existingItem = normalizedM3uMap.get(normalizedTmdbTitle);
         const isRequested = requestedItems.has(tmdbItem.name);
 
         if (isRequested) {
             return {...tmdbItem, status: 'requested'};
         }
-        if (isExisting) {
-            return {...tmdbItem, status: 'existing'};
+        if (existingItem) {
+            return {...tmdbItem, status: 'existing', existingCategory: existingItem.category };
         }
         return {...tmdbItem, status: 'requestable'};
       });
@@ -217,7 +222,7 @@ export default function Home() {
                           <ContentCardSkeleton key={`skeleton-${index}`} />
                        ) : (
                          <div key={`result-${index}`} className="flex flex-col gap-2 items-center">
-                           <ContentCard item={item} />
+                           <ContentCard item={item} showCategory={item.status !== 'existing'} />
                            {item.status === 'requestable' ? (
                               <Button 
                                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
@@ -231,9 +236,9 @@ export default function Home() {
                                  Solicitado
                               </Button>
                            ) : (
-                              <Button variant="secondary" disabled className="w-full cursor-default">
-                                 Já está no sistema
-                              </Button>
+                              <Badge variant="secondary" className="w-full justify-center text-center py-2 px-1 cursor-default">
+                                 {item.existingCategory}
+                              </Badge>
                            )}
                          </div>
                        )
