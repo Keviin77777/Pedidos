@@ -58,31 +58,33 @@ export default function CorrectionPage() {
       .trim();
   };
   
-  const searchTmdbForDetails = async (title: string): Promise<Partial<M3UItem>> => {
-      try {
-        const cleanedTitle = title.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-        const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-          cleanedTitle
-        )}&language=pt-BR`;
-        const response = await fetch(searchUrl);
-  
-        if (!response.ok) return {};
-  
-        const data = await response.json();
-        const result = data.results?.[0];
+  const searchTmdbForDetails = async (item: M3UItem): Promise<M3UItem> => {
+    try {
+      const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+      const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+        cleanedTitle
+      )}&language=pt-BR`;
+      const response = await fetch(searchUrl);
 
-        if (result && (result.media_type === 'movie' || result.media_type === 'tv')) {
-          return {
+      if (!response.ok) return item;
+
+      const data = await response.json();
+      const result = data.results?.[0];
+
+      if (result && (result.media_type === 'movie' || result.media_type === 'tv')) {
+        return {
+            ...item,
             synopsis: result.overview || 'Nenhuma sinopse disponível.',
-            logo: result.poster_path ? `${TMDB_IMAGE_BASE_URL}${result.poster_path}` : null,
-          };
-        }
-        return {};
-      } catch (error) {
-        console.error('Error fetching from TMDB for details:', error);
-        return {};
+            logo: result.poster_path ? `${TMDB_IMAGE_BASE_URL}${result.poster_path}` : item.logo,
+        };
       }
+      return item;
+    } catch (error) {
+      console.error('Error fetching from TMDB for details:', error);
+      return item;
+    }
   };
+
 
   useEffect(() => {
     if (isLoading) return;
@@ -102,12 +104,11 @@ export default function CorrectionPage() {
     setFilteredItems(enriched);
 
     enriched.forEach(async (item, index) => {
-        const details = await searchTmdbForDetails(item.name);
+        const details = await searchTmdbForDetails(item);
         setFilteredItems(prev => {
             const newItems = [...prev];
             if (newItems[index]) {
                 newItems[index] = {
-                    ...newItems[index],
                     ...details,
                     status: 'loaded',
                 };
