@@ -36,36 +36,46 @@ export default function CorrectionPage() {
   
   const searchTmdbForDetails = async (item: M3UItem): Promise<M3UItem> => {
     try {
-      const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-      let searchType = 'multi';
-      if (item.category.toLowerCase().includes('filme')) {
-          searchType = 'movie';
-      } else if (item.category.toLowerCase().includes('série')) {
-          searchType = 'tv';
-      }
-      
-      const searchUrl = `https://api.themoviedb.org/3/search/${searchType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-        cleanedTitle
-      )}&language=pt-BR`;
-      
-      const response = await fetch(searchUrl);
+        const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+        
+        const searchTypes = ['movie', 'tv'];
+        const requests = searchTypes.map(type => 
+            fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(cleanedTitle)}&language=pt-BR`)
+                .then(res => res.ok ? res.json() : Promise.resolve({ results: [] }))
+        );
 
-      if (!response.ok) return item;
+        const [movieResults, tvResults] = await Promise.all(requests);
 
-      const data = await response.json();
-      const result = data.results?.[0];
+        const allResults = [
+            ...(movieResults.results || []).map((r: any) => ({ ...r, searchType: 'movie' })),
+            ...(tvResults.results || []).map((r: any) => ({ ...r, searchType: 'tv' }))
+        ];
 
-      if (result) {
-        return {
-            ...item,
-            synopsis: result.overview || 'Nenhuma sinopse disponível.',
-            logo: result.poster_path ? `${TMDB_IMAGE_BASE_URL}${result.poster_path}` : item.logo,
-        };
-      }
-      return item;
+        // Basic similarity check (can be improved)
+        const normalizedCleanedTitle = normalizeTitle(cleanedTitle);
+        const bestResult = allResults.sort((a, b) => {
+            const titleA = normalizeTitle(a.title || a.name || '');
+            const titleB = normalizeTitle(b.title || b.name || '');
+            // A simple way to score similarity: exact match is best, then starts with, then includes.
+            const scoreA = titleA === normalizedCleanedTitle ? 3 : titleA.startsWith(normalizedCleanedTitle) ? 2 : titleA.includes(normalizedCleanedTitle) ? 1 : 0;
+            const scoreB = titleB === normalizedCleanedTitle ? 3 : titleB.startsWith(normalizedCleanedTitle) ? 2 : titleB.includes(normalizedCleanedTitle) ? 1 : 0;
+            return scoreB - scoreA;
+        })[0];
+        
+        if (bestResult) {
+            return {
+                ...item,
+                synopsis: bestResult.overview || 'Nenhuma sinopse disponível.',
+                logo: bestResult.poster_path ? `${TMDB_IMAGE_BASE_URL}${bestResult.poster_path}` : item.logo,
+                // We can even update the category if we want, for consistency
+                category: bestResult.searchType === 'tv' ? 'Série' : 'Filme',
+            };
+        }
+
+        return item; // Return original if no result found
     } catch (error) {
-      console.error('Error fetching from TMDB for details:', error);
-      return item; 
+        console.error('Error fetching from TMDB for details:', error);
+        return item;
     }
   };
 
