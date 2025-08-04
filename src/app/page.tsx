@@ -25,8 +25,30 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [m3uItemsCache, setM3uItemsCache] = useState<M3UItem[]>([]);
+  const [isCacheLoading, setIsCacheLoading] = useState(true);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchM3uData = async () => {
+      try {
+        const items = await getM3UItems();
+        setM3uItemsCache(items);
+      } catch (error) {
+        console.error("Failed to load M3U cache:", error);
+        toast({
+          title: 'Erro ao carregar lista local',
+          description: 'Não foi possível carregar a lista de conteúdos existentes. A busca pode não ser precisa.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsCacheLoading(false);
+      }
+    };
+    fetchM3uData();
+  }, [toast]);
+
 
   const handleRequest = (item: M3UItem) => {
     console.log('Request submitted for:', item.name);
@@ -106,18 +128,8 @@ export default function Home() {
       setIsLoading(false);
 
 
-      // Now fetch M3U list and update statuses
-      let m3uItems: M3UItem[] = [];
-      try {
-        m3uItems = await getM3UItems();
-      } catch (e) {
-        console.error("Could not fetch M3U list, continuing without it.", e);
-        // If M3U fails, all items are requestable
-        setResults(tmdbResults.map(item => ({...item, status: 'requestable'})));
-        return;
-      }
-      
-      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
+      // Now use the cached M3U list to update statuses
+      const normalizedM3uTitles = new Set(m3uItemsCache.map(item => normalizeTitle(item.name)));
 
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
@@ -142,9 +154,10 @@ export default function Home() {
         variant: 'destructive',
       });
       setResults([]);
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, m3uItemsCache]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -173,18 +186,24 @@ export default function Home() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
+                disabled={isCacheLoading}
               />
+               {isCacheLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                </div>
+               )}
             </div>
           </div>
 
           <div className="pt-8">
-            {isLoading && (
+            {isLoading && !searchPerformed && (
               <div className="flex justify-center items-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             )}
             
-            {!isLoading && searchPerformed && (
+            {searchPerformed && (
               <>
                 {results.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -211,7 +230,7 @@ export default function Home() {
                     ))}
                   </div>
                 ) : (
-                   searchQuery.length > 2 && (
+                   searchQuery.length > 2 && !isLoading && (
                     <Card className="text-center py-10 px-6 border-dashed bg-card">
                       <CardContent>
                         <h3 className="text-xl font-semibold text-card-foreground mb-2">
