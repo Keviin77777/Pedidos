@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
-import { saveContentRequest, getContentRequests, onRequestsUpdated } from '@/lib/admin';
+import { saveContentRequest, onRequestsUpdated } from '@/lib/admin';
 import type { ContentRequest } from '@/lib/admin';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -40,15 +40,24 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onRequestsUpdated((allRequests) => {
-        setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
-        const requested = new Set(allRequests.filter(r => r.status === 'Pendente').map(r => r.title));
-        setRequestedItems(requested);
-    });
-
+    const unsubscribe = onRequestsUpdated(
+        (allRequests) => {
+            setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
+            const requestedTitles = new Set(allRequests.filter(r => r.status === 'Pendente').map(r => r.title));
+            setRequestedItems(requestedTitles);
+        },
+        (error) => {
+            console.error("Failed to listen for request updates:", error);
+            toast({
+                title: "Erro de Sincronização",
+                description: "Não foi possível conectar para obter atualizações de pedidos.",
+                variant: 'destructive'
+            });
+        }
+    );
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const handleRequest = async (item: M3UItem) => {
     try {
@@ -61,11 +70,7 @@ export default function Home() {
         title: 'Pedido Enviado!',
         description: `Recebemos seu pedido para "${item.name}".`,
       });
-      // Optimistically update the state
-      setRequestedItems(prev => new Set(prev).add(item.name));
-      setResults(prev => 
-        prev.map(r => r.name === item.name ? {...r, status: 'requested'} : r)
-      );
+      // The onRequestsUpdated listener will handle the state update automatically
     } catch (error) {
        toast({
         title: 'Erro ao Enviar',
@@ -149,6 +154,8 @@ export default function Home() {
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
         const existingItem = normalizedM3uMap.get(normalizedTmdbTitle);
+        
+        // Use the live set of requested titles from our real-time listener
         const isRequested = requestedItems.has(tmdbItem.name);
 
         if (isRequested) {

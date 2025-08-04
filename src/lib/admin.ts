@@ -13,6 +13,7 @@ import {
   orderBy,
   onSnapshot,
   getDocs,
+  CollectionReference,
 } from 'firebase/firestore';
 
 // ======== TYPES ========
@@ -44,60 +45,49 @@ const reportsCollection = collection(db, 'problem-reports');
 
 // ======== REALTIME LISTENERS ========
 
-const createOnSnapshotListener = <T>(
-  col: collection,
+const createOnSnapshotListener = <T extends { reportedAt: string } | { requestedAt: string }>(
+  col: CollectionReference,
+  orderByField: 'reportedAt' | 'requestedAt',
   setData: (data: T[]) => void,
   onError: (error: Error) => void
 ) => {
-  const q = query(col, orderBy('requestedAt', 'desc'));
+  const q = query(col, orderBy(orderByField, 'desc'));
   
-  return onSnapshot(q, (querySnapshot) => {
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
     const items: T[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       const id = doc.id;
       // Convert Firestore Timestamp to ISO string
-      const requestedAt = (data.requestedAt as Timestamp).toDate().toISOString();
-      items.push({ ...data, id, requestedAt } as T);
+      const timestamp = (data[orderByField] as Timestamp).toDate().toISOString();
+      items.push({ ...data, id, [orderByField]: timestamp } as T);
     });
     setData(items);
   }, (error) => {
-    console.error("Error listening to collection:", error);
+    console.error(`Error listening to ${col.id} collection:`, error);
     onError(error);
   });
+  
+  return unsubscribe;
 };
 
 export const onRequestsUpdated = (
   callback: (requests: ContentRequest[]) => void,
   onError: (error: Error) => void
 ) => {
-  return createOnSnapshotListener<ContentRequest>(requestsCollection, callback, onError);
+  return createOnSnapshotListener<ContentRequest>(requestsCollection, 'requestedAt', callback, onError);
 };
 
 export const onProblemReportsUpdated = (
   callback: (reports: ProblemReport[]) => void,
   onError: (error: Error) => void
 ) => {
-  return createOnSnapshotListener<ProblemReport>(reportsCollection, callback, onError);
+  // Firestore timestamps for reports are in 'reportedAt'
+  return createOnSnapshotListener<ProblemReport>(reportsCollection, 'reportedAt', callback, onError);
 };
 
 
 // ======== CONTENT REQUESTS ========
-
-export const getContentRequests = async (): Promise<ContentRequest[]> => {
-  const q = query(requestsCollection, orderBy('requestedAt', 'desc'));
-  const snapshot = await getDocs(q);
-  const requests: ContentRequest[] = [];
-  snapshot.forEach(doc => {
-      const data = doc.data() as FirebaseContentRequest;
-      requests.push({
-          id: doc.id,
-          ...data,
-          requestedAt: data.requestedAt.toDate().toISOString(),
-      });
-  });
-  return requests;
-};
 
 export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'requestedAt' | 'status'>): Promise<void> => {
   const newRequest: FirebaseContentRequest = {
@@ -120,21 +110,6 @@ export const deleteContentRequest = async (id: string): Promise<void> => {
 
 
 // ======== PROBLEM REPORTS ========
-
-export const getProblemReports = async (): Promise<ProblemReport[]> => {
-  const q = query(reportsCollection, orderBy('reportedAt', 'desc'));
-  const snapshot = await getDocs(q);
-  const reports: ProblemReport[] = [];
-  snapshot.forEach(doc => {
-      const data = doc.data() as FirebaseProblemReport;
-      reports.push({
-          id: doc.id,
-          ...data,
-          reportedAt: data.reportedAt.toDate().toISOString(),
-      });
-  });
-  return reports;
-};
 
 export const saveProblemReport = async (report: Omit<ProblemReport, 'id' | 'reportedAt' | 'status'>): Promise<void> => {
   const newReport: FirebaseProblemReport = {

@@ -73,16 +73,30 @@ export default function AdminDashboard() {
   }, [toast]);
 
   const handleRequestStatusChange = async (id: string, status: 'Pendente' | 'Adicionado') => {
-    await updateContentRequestStatus(id, status);
+    try {
+      await updateContentRequestStatus(id, status);
+      toast({ title: 'Status Alterado', description: `O pedido foi marcado como ${status.toLowerCase()}.` });
+    } catch(e) {
+      toast({ title: 'Erro ao Alterar Status', description: 'Não foi possível alterar o status do pedido.', variant: 'destructive' });
+    }
   };
 
   const handleReportStatusChange = async (id: string, status: 'Aberto' | 'Resolvido') => {
-    await updateProblemReportStatus(id, status);
+    try {
+      await updateProblemReportStatus(id, status);
+      toast({ title: 'Status Alterado', description: `O relatório foi marcado como ${status.toLowerCase()}.` });
+    } catch(e) {
+      toast({ title: 'Erro ao Alterar Status', description: 'Não foi possível alterar o status do relatório.', variant: 'destructive' });
+    }
   };
 
   const handleRequestDelete = async (id: string) => {
-    await deleteContentRequest(id);
-    toast({ title: 'Pedido Removido', description: 'O pedido foi removido com sucesso.' });
+    try {
+      await deleteContentRequest(id);
+      toast({ title: 'Pedido Removido', description: 'O pedido foi removido com sucesso.' });
+    } catch (e) {
+      toast({ title: 'Erro ao Remover', description: 'Não foi possível remover o pedido.', variant: 'destructive' });
+    }
   }
 
   const renderTableBody = (
@@ -152,17 +166,17 @@ export default function AdminDashboard() {
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </>,
-                  (req) => (
+                  (req: ContentRequest) => (
                     <TableRow key={req.id}>
                       <TableCell>
                           <div className="flex items-center gap-4">
-                              <div className="w-24 h-14 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                              <div className="w-16 h-24 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
                                 <Image
-                                    src={req.logo || 'https://placehold.co/150x100.png'}
+                                    src={req.logo || 'https://placehold.co/400x600.png'}
                                     alt={`Capa de ${req.title}`}
                                     fill
                                     className="object-cover"
-                                    sizes="100px"
+                                    sizes="64px"
                                     data-ai-hint="movie poster"
                                 />
                               </div>
@@ -236,7 +250,7 @@ export default function AdminDashboard() {
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </>,
-                  (report) => (
+                  (report: ProblemReport) => (
                     <TableRow key={report.id}>
                       <TableCell className="font-medium">{report.title}</TableCell>
                       <TableCell>{report.problem}</TableCell>
