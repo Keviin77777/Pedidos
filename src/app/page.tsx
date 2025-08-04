@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -69,6 +68,8 @@ export default function Home() {
     if (!title) return '';
     return title
       .toLowerCase()
+      // Remove season/episode identifiers like S01E01, T01E01, etc.
+      .replace(/\s*(s\d{2}e\d{2}|s\d{1,2}|t\d{1,2}e\d{1,2}).*$/i, '')
       .replace(/\s*\(\d{4}\)\s*$/, '') // Remove (YYYY)
       .normalize('NFD') // Decompose accented letters
       .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
@@ -278,4 +279,3 @@ export default function Home() {
       </footer>
     </div>
   );
- 
