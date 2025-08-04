@@ -39,7 +39,7 @@ export default function CorrectionPage() {
         console.error("Failed to load M3U list:", error);
         toast({
           title: 'Erro ao carregar lista local',
-          description: 'Não foi possível carregar a lista de conteúdos existentes. Tente recarregar a página.',
+          description: 'Não foi possível carregar la lista de conteúdos existentes. Tente recarregar a página.',
           variant: 'destructive',
         });
       } finally {
@@ -60,10 +60,19 @@ export default function CorrectionPage() {
   
   const searchTmdbForDetails = async (item: M3UItem): Promise<M3UItem> => {
     try {
+      // Prioritize movie search if category is movie, otherwise tv, then multi
       const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
-      const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+      let searchType = 'multi';
+      if (item.category.toLowerCase().includes('filme')) {
+          searchType = 'movie';
+      } else if (item.category.toLowerCase().includes('série')) {
+          searchType = 'tv';
+      }
+      
+      const searchUrl = `https://api.themoviedb.org/3/search/${searchType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
         cleanedTitle
       )}&language=pt-BR`;
+
       const response = await fetch(searchUrl);
 
       if (!response.ok) return item;
@@ -71,7 +80,7 @@ export default function CorrectionPage() {
       const data = await response.json();
       const result = data.results?.[0];
 
-      if (result && (result.media_type === 'movie' || result.media_type === 'tv')) {
+      if (result) {
         return {
             ...item,
             synopsis: result.overview || 'Nenhuma sinopse disponível.',
@@ -81,7 +90,7 @@ export default function CorrectionPage() {
       return item;
     } catch (error) {
       console.error('Error fetching from TMDB for details:', error);
-      return item;
+      return item; // Return original item on fetch error
     }
   };
 
@@ -91,7 +100,7 @@ export default function CorrectionPage() {
 
     const normalizedQuery = normalizeTitle(searchQuery);
 
-    if (normalizedQuery.length < 3) {
+    if (searchQuery.trim().length < 3) {
       setFilteredItems([]);
       return;
     }
@@ -103,7 +112,7 @@ export default function CorrectionPage() {
     const enriched: EnrichedM3UItem[] = filtered.map(item => ({...item, status: 'loading'}));
     setFilteredItems(enriched);
 
-    enriched.forEach(async (item, index) => {
+    enriched.forEach(async (item) => {
         try {
             const details = await searchTmdbForDetails(item);
             setFilteredItems(prev => {
@@ -116,17 +125,16 @@ export default function CorrectionPage() {
                         status: 'loaded',
                     };
                 }
-                return newItems;
+                return newItems.sort((a,b) => a.name.localeCompare(b.name));
             });
         } catch (error) {
-             // If TMDB fails for one item, just load it with its original data
              setFilteredItems(prev => {
                 const newItems = [...prev];
                 const originalIndex = newItems.findIndex(i => i.name === item.name && i.status === 'loading');
                 if (originalIndex !== -1) {
                     newItems[originalIndex] = { ...item, status: 'loaded' };
                 }
-                return newItems;
+                return newItems.sort((a,b) => a.name.localeCompare(b.name));
             });
         }
     });
@@ -198,4 +206,5 @@ export default function CorrectionPage() {
       </footer>
     </div>
   );
-}
+
+    
