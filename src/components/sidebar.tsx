@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Clapperboard, Home, Wrench, Shield } from 'lucide-react';
+import { Home, Wrench, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -17,8 +17,8 @@ const Sidebar = () => {
   return (
     <aside className="w-64 flex-shrink-0 bg-card border-r flex flex-col">
       <div className="h-16 flex items-center px-6 border-b">
-        <Clapperboard className="w-8 h-8 mr-3 text-primary" />
-        <h1 className="text-xl font-bold tracking-tight">CineAssist</h1>
+        <Ticket className="w-8 h-8 mr-3 text-primary" />
+        <h1 className="text-xl font-bold tracking-tight">Pedidos Cine</h1>
       </div>
       <nav className="flex-grow px-4 py-6">
         <ul className="space-y-2">
@@ -41,7 +41,7 @@ const Sidebar = () => {
         </ul>
       </nav>
       <footer className="text-center p-4 text-muted-foreground text-xs border-t">
-        <p>CineAssist &copy; {new Date().getFullYear()}</p>
+        <p>Pedidos Cine &copy; {new Date().getFullYear()}</p>
       </footer>
     </aside>
   );

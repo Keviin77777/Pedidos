@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'CineAssist',
+  title: 'Pedidos Cine',
   description: 'Navegue, solicite e gerencie seus filmes e séries.',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 };
@@ -17,11 +17,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full`}>
+    <html lang="pt-BR" className={`${inter.variable} h-full dark`}>
       <body className="font-body antialiased h-full overflow-hidden">
         {children}
       </body>
     </html>
   );
 }
-

@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 
 
 export const metadata = {
-  title: 'CineAssist - Admin',
-  description: 'Painel de Administração do CineAssist',
+  title: 'Pedidos Cine - Admin',
+  description: 'Painel de Administração do Pedidos Cine',
 };
 
 export default function AdminLayout({

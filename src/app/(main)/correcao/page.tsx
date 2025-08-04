@@ -184,7 +184,7 @@ export default function CorrectionPage() {
         </div>
       </div>
       <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>CineAssist &copy; {new Date().getFullYear()}</p>
+        <p>Pedidos Cine &copy; {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
