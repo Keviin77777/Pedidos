@@ -7,7 +7,7 @@ import { M3uProvider } from '@/contexts/M3uContext';
 import LoadingOverlay from '@/components/loading-overlay';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 export default function MainAppLayout({
   children,
@@ -28,6 +28,9 @@ export default function MainAppLayout({
            {/* Mobile Sidebar */}
            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
              <SheetContent side="left" className="p-0 w-64">
+                <SheetHeader>
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                </SheetHeader>
                 <Sidebar />
              </SheetContent>
            </Sheet>
