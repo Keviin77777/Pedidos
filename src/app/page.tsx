@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { getM3UItems } from '@/lib/m3u';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
+import { ManualRequestDialog } from '@/components/request-dialog';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -122,13 +123,10 @@ export default function Home() {
         return;
       }
 
-      // Set initial results to loading state
       const initialResults: SearchResult[] = tmdbResults.map(item => ({...item, status: 'loading'}));
       setResults(initialResults);
       setIsLoading(false);
 
-
-      // Now use the cached M3U list to update statuses
       const normalizedM3uTitles = new Set(m3uItemsCache.map(item => normalizeTitle(item.name)));
 
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
@@ -175,8 +173,8 @@ export default function Home() {
             <h2 className="text-2xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
             <p className="text-muted-foreground">Não encontrou o que procurava? Verifique aqui e faça seu pedido.</p>
           </div>
-          <div className="flex w-full max-w-2xl mx-auto items-center space-x-2">
-            <div className="relative flex-grow">
+          <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-2">
+            <div className="relative w-full flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
@@ -192,6 +190,7 @@ export default function Home() {
                 </div>
                )}
             </div>
+            <ManualRequestDialog />
           </div>
 
           <div className="pt-8">
@@ -235,7 +234,7 @@ export default function Home() {
                           Nenhum resultado encontrado
                         </h3>
                         <p className="text-muted-foreground">
-                          Não encontramos nenhum conteúdo para "{searchQuery}". Verifique o título e tente novamente.
+                          Não encontramos nenhum conteúdo para "{searchQuery}". Verifique o título ou faça um pedido manual.
                         </p>
                       </CardContent>
                     </Card>
@@ -252,5 +251,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

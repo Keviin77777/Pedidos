@@ -13,16 +13,15 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { FilePlus2 } from 'lucide-react';
 
-interface RequestDialogProps {
-  initialValue?: string;
-}
-
-export function RequestDialog({ initialValue = '' }: RequestDialogProps) {
+export function ManualRequestDialog() {
   const { toast } = useToast();
-  const [title, setTitle] = useState(initialValue);
+  const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,28 +35,30 @@ export function RequestDialog({ initialValue = '' }: RequestDialogProps) {
       return;
     }
     // In a real app, this would send the request to a server.
-    console.log('Request submitted:', title);
+    console.log('Manual Request submitted:', { title, notes });
     toast({
-      title: 'Pedido Enviado!',
+      title: 'Pedido Manual Enviado!',
       description: `Recebemos seu pedido para "${title}".`,
     });
     setIsOpen(false);
     setTitle('');
+    setNotes('');
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 rounded-full">
-          Fazer um pedido
+        <Button variant="ghost" className="text-sm text-muted-foreground">
+          <FilePlus2 className="mr-2 h-4 w-4" />
+          Não encontrou? Peça manualmente
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Pedir Novo Conteúdo</DialogTitle>
+            <DialogTitle>Pedir Conteúdo Manualmente</DialogTitle>
             <DialogDescription>
-              Não encontrou o que procurava? Faça um pedido e tentaremos adicionar.
+              Use este formulário se não encontrou o que procurava na busca.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -70,7 +71,19 @@ export function RequestDialog({ initialValue = '' }: RequestDialogProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="col-span-3"
-                placeholder="Ex: The Matrix"
+                placeholder="Ex: O Poderoso Chefão (1972)"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="notes" className="text-right pt-2">
+                Observação
+              </Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="col-span-3"
+                placeholder="Alguma informação adicional? Ex: Versão do diretor, dublagem específica, etc."
               />
             </div>
           </div>
