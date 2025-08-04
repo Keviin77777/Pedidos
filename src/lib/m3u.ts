@@ -48,10 +48,10 @@ export async function getM3UItems(): Promise<M3UItem[]> {
         vodCategoriesResponse, 
         seriesCategoriesResponse
     ] = await Promise.all([
-      fetch(endpoints.vod, { next: { revalidate: 600 } }), // Cache for 10 minutes
-      fetch(endpoints.series, { next: { revalidate: 600 } }),
-      fetch(endpoints.vodCategories, { next: { revalidate: 600 } }),
-      fetch(endpoints.seriesCategories, { next: { revalidate: 600 } })
+      fetch(endpoints.vod, { cache: 'no-store' }), // Cache for 10 minutes
+      fetch(endpoints.series, { cache: 'no-store' }),
+      fetch(endpoints.vodCategories, { cache: 'no-store' }),
+      fetch(endpoints.seriesCategories, { cache: 'no-store' })
     ]);
 
     // Helper to process response and parse JSON
