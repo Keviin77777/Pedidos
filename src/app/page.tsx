@@ -64,6 +64,15 @@ export default function Home() {
     }
   };
 
+  const normalizeTitle = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/\s*\(\d{4}\)\s*/, '') // Remove (year)
+      .normalize('NFD') // Decompose accents
+      .replace(/[\u0300-\u036f]/g, '') // Remove accent characters
+      .trim();
+  };
+
   const handleSearch = async () => {
     if (searchQuery.trim() === '') {
       toast({
@@ -80,20 +89,20 @@ export default function Home() {
     setNewItems([]);
 
     const allM3UItems = await getM3UItems();
-    const lowerCaseQuery = searchQuery.toLowerCase();
+    const normalizedQuery = normalizeTitle(searchQuery);
 
     // Find items that already exist in the system
     const foundInM3U = allM3UItems.filter(item =>
-      item.name.toLowerCase().includes(lowerCaseQuery)
+      normalizeTitle(item.name).includes(normalizedQuery)
     );
     setExistingItems(foundInM3U);
 
     // Find new items from TMDB that are not in the system
     const tmdbResults = await searchTmdb(searchQuery);
-    const m3uNames = new Set(allM3UItems.map(item => item.name.toLowerCase()));
+    const normalizedM3UNames = new Set(allM3UItems.map(item => normalizeTitle(item.name)));
 
     const foundInTmdb = tmdbResults.filter(
-      tmdbItem => !m3uNames.has(tmdbItem.name.toLowerCase())
+      tmdbItem => !normalizedM3UNames.has(normalizeTitle(tmdbItem.name))
     );
     setNewItems(foundInTmdb);
 
