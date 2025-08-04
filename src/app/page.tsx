@@ -66,10 +66,12 @@ export default function Home() {
     if (!title) return '';
     return title
       .toLowerCase()
-      .replace(/\s*\(\d{4}\)\s*$/, '') 
-      .normalize('NFD') 
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s]/gi, '') 
+      .replace(/\s*\(\d{4}\)\s*$/, '') // Remove (YYYY)
+      .normalize('NFD') // Decompose accented letters
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
+      .replace(/ & /g, ' e ') // Replace & with 'e'
+      .replace(/[^\w\s]/gi, '') // Remove remaining punctuation
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
       .trim();
   };
   
@@ -262,3 +264,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
