@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -16,69 +19,39 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import Header from "@/components/header";
+import { Button } from '@/components/ui/button';
+import {
+  getContentRequests,
+  getProblemReports,
+  updateContentRequestStatus,
+  updateProblemReportStatus
+} from '@/lib/admin';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
 
-// Mock data - replace with actual data from your backend/DB
-const contentRequests = [
-  {
-    id: "REQ001",
-    title: "O Poderoso Chefão: Parte II (1974)",
-    type: "Filme",
-    requestedAt: "2024-08-01T10:00:00Z",
-    status: "Pendente",
-  },
-  {
-    id: "REQ002",
-    title: "Breaking Bad - Temporada 5",
-    type: "Série",
-    requestedAt: "2024-08-01T11:30:00Z",
-    status: "Pendente",
-  },
-  {
-    id: "REQ003",
-    title: "Clube da Luta (1999)",
-    type: "Filme",
-    requestedAt: "2024-07-31T15:00:00Z",
-    status: "Adicionado",
-  },
-   {
-    id: "REQ004",
-    title: "Interestelar (2014) - Versão IMAX",
-    type: "Pedido Manual",
-    notes: "Gostaria da versão com a proporção de tela expandida.",
-    requestedAt: "2024-07-30T09:12:00Z",
-    status: "Pendente",
-  },
-];
-
-const problemReports = [
-  {
-    id: "REP001",
-    title: "Game of Thrones - S08E03",
-    problem: "A imagem está muito escura, quase não dá pra ver nada.",
-    reportedAt: "2024-07-29T22:00:00Z",
-    status: "Aberto",
-  },
-  {
-    id: "REP002",
-    title: "Pulp Fiction",
-    problem: "O áudio está dessincronizado a partir dos 45 minutos.",
-    reportedAt: "2024-07-28T18:45:00Z",
-    status: "Resolvido",
-  },
-  {
-    id: "REP003",
-    title: "Vingadores: Ultimato",
-    problem: "O poster do filme está com a imagem errada, é do filme Guerra Infinita.",
-    reportedAt: "2024-07-27T14:20:00Z",
-    status: "Aberto",
-  },
-];
 
 export default function AdminDashboard() {
+  const [requests, setRequests] = useState<ReturnType<typeof getContentRequests>>([]);
+  const [reports, setReports] = useState<ReturnType<typeof getProblemReports>>([]);
+  
+  // Use effect to load data on the client side
+  useEffect(() => {
+    setRequests(getContentRequests());
+    setReports(getProblemReports());
+  }, []);
+
+  const handleRequestStatusChange = (id: string, status: 'Pendente' | 'Adicionado') => {
+    updateContentRequestStatus(id, status);
+    setRequests(getContentRequests()); // Refresh state
+  };
+  
+  const handleReportStatusChange = (id: string, status: 'Aberto' | 'Resolvido') => {
+    updateProblemReportStatus(id, status);
+    setReports(getProblemReports()); // Refresh state
+  };
+
   return (
     <>
-      <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4">
           <h1 className="text-3xl font-bold tracking-tight">Painel Admin</h1>
@@ -108,10 +81,11 @@ export default function AdminDashboard() {
                       <TableHead className="hidden md:table-cell">Tipo</TableHead>
                       <TableHead className="hidden md:table-cell">Data</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contentRequests.map((req) => (
+                    {requests.map((req) => (
                       <TableRow key={req.id}>
                         <TableCell>
                             <div className="font-medium">{req.title}</div>
@@ -129,6 +103,23 @@ export default function AdminDashboard() {
                           >
                             {req.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Adicionado')}>
+                                  Marcar como Adicionado
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Pendente')}>
+                                  Marcar como Pendente
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -154,10 +145,11 @@ export default function AdminDashboard() {
                       <TableHead>Problema Descrito</TableHead>
                       <TableHead className="hidden md:table-cell">Data</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {problemReports.map((report) => (
+                    {reports.map((report) => (
                       <TableRow key={report.id}>
                         <TableCell className="font-medium">{report.title}</TableCell>
                         <TableCell>{report.problem}</TableCell>
@@ -172,6 +164,23 @@ export default function AdminDashboard() {
                           >
                             {report.status}
                            </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleReportStatusChange(report.id, 'Resolvido')}>
+                                  Marcar como Resolvido
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleReportStatusChange(report.id, 'Aberto')}>
+                                  Marcar como Aberto
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}

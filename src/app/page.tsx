@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
+import { saveContentRequest } from '@/lib/admin';
 
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
@@ -37,7 +38,10 @@ export default function Home() {
   const { toast } = useToast();
 
   const handleRequest = (item: M3UItem) => {
-    console.log('Request submitted for:', item.name);
+    saveContentRequest({
+      title: item.name,
+      type: item.category,
+    });
     toast({
       title: 'Pedido Enviado!',
       description: `Recebemos seu pedido para "${item.name}".`,

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -17,6 +18,7 @@ import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { FilePlus2 } from 'lucide-react';
+import { saveContentRequest } from '@/lib/admin';
 
 export function ManualRequestDialog() {
   const { toast } = useToast();
@@ -34,8 +36,13 @@ export function ManualRequestDialog() {
       });
       return;
     }
-    // In a real app, this would send the request to a server.
-    console.log('Manual Request submitted:', { title, notes });
+    
+    saveContentRequest({
+      title,
+      notes,
+      type: 'Pedido Manual',
+    });
+
     toast({
       title: 'Pedido Manual Enviado!',
       description: `Recebemos seu pedido para "${title}".`,

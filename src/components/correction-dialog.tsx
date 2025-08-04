@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Wrench } from 'lucide-react';
 import type { M3UItem } from '@/lib/types';
+import { saveProblemReport } from '@/lib/admin';
 
 interface CorrectionDialogProps {
   item: M3UItem;
@@ -38,8 +39,12 @@ export function CorrectionDialog({ item }: CorrectionDialogProps) {
       });
       return;
     }
-    // In a real app, this would send the report to a server.
-    console.log('Correction Report submitted:', { title: item.name, issue });
+    
+    saveProblemReport({
+        title: item.name,
+        problem: issue,
+    });
+
     toast({
       title: 'Relatório de Correção Enviado!',
       description: `Recebemos seu relatório para "${item.name}". Obrigado por ajudar!`,
