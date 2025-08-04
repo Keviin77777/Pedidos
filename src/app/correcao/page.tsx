@@ -104,17 +104,31 @@ export default function CorrectionPage() {
     setFilteredItems(enriched);
 
     enriched.forEach(async (item, index) => {
-        const details = await searchTmdbForDetails(item);
-        setFilteredItems(prev => {
-            const newItems = [...prev];
-            if (newItems[index]) {
-                newItems[index] = {
-                    ...details,
-                    status: 'loaded',
-                };
-            }
-            return newItems;
-        });
+        try {
+            const details = await searchTmdbForDetails(item);
+            setFilteredItems(prev => {
+                const newItems = [...prev];
+                const originalIndex = newItems.findIndex(i => i.name === item.name && i.status === 'loading');
+
+                if (originalIndex !== -1) {
+                    newItems[originalIndex] = {
+                        ...details,
+                        status: 'loaded',
+                    };
+                }
+                return newItems;
+            });
+        } catch (error) {
+             // If TMDB fails for one item, just load it with its original data
+             setFilteredItems(prev => {
+                const newItems = [...prev];
+                const originalIndex = newItems.findIndex(i => i.name === item.name && i.status === 'loading');
+                if (originalIndex !== -1) {
+                    newItems[originalIndex] = { ...item, status: 'loaded' };
+                }
+                return newItems;
+            });
+        }
     });
 
   }, [searchQuery, m3uItems, isLoading]);
