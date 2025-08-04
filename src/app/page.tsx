@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
@@ -8,12 +9,12 @@ import { Search } from 'lucide-react';
 import ContentCard from '@/components/content-card';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { getM3UItems } from '@/lib/m3u';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { M3uContext } from '@/contexts/M3uContext';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -29,31 +30,10 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [m3uItemsCache, setM3uItemsCache] = useState<M3UItem[]>([]);
-  const [isCacheLoading, setIsCacheLoading] = useState(true);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
 
+  const { m3uItems: m3uItemsCache, isLoading: isCacheLoading } = useContext(M3uContext);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchM3uData = async () => {
-      try {
-        const items = await getM3UItems();
-        setM3uItemsCache(items);
-      } catch (error) {
-        console.error("Failed to load M3U cache:", error);
-        toast({
-          title: 'Erro ao carregar lista local',
-          description: 'Não foi possível carregar a lista de conteúdos existentes. A busca pode não ser precisa.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsCacheLoading(false);
-      }
-    };
-    fetchM3uData();
-  }, [toast]);
-
 
   const handleRequest = (item: M3UItem) => {
     console.log('Request submitted for:', item.name);
@@ -68,14 +48,13 @@ export default function Home() {
     if (!title) return '';
     return title
       .toLowerCase()
-      // Remove season/episode identifiers like S01E01, T01E01, etc.
       .replace(/\s*(s\d{2}e\d{2}|s\d{1,2}|t\d{1,2}e\d{1,2}).*$/i, '')
-      .replace(/\s*\(\d{4}\)\s*$/, '') // Remove (YYYY)
-      .normalize('NFD') // Decompose accented letters
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks
-      .replace(/ & /g, ' e ') // Replace & with 'e'
-      .replace(/[^\w\s]/gi, '') // Remove remaining punctuation
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .replace(/\s*\(\d{4}\)\s*$/, '') 
+      .normalize('NFD') 
+      .replace(/[\u0300-\u036f]/g, '') 
+      .replace(/ & /g, ' e ') 
+      .replace(/[^\w\s]/gi, '') 
+      .replace(/\s+/g, ' ') 
       .trim();
   };
   
@@ -110,7 +89,6 @@ export default function Home() {
       return [];
     }
   };
-
 
   const handleSearch = useCallback(async (query: string, type: string) => {
     if (query.trim().length < 3) {
@@ -171,12 +149,13 @@ export default function Home() {
   }, [toast, m3uItemsCache, requestedItems]);
 
   useEffect(() => {
+    if (isCacheLoading) return;
     const delayDebounceFn = setTimeout(() => {
       handleSearch(searchQuery, searchType);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, searchType, handleSearch]);
+  }, [searchQuery, searchType, handleSearch, isCacheLoading]);
 
 
   return (
@@ -217,13 +196,15 @@ export default function Home() {
           </div>
 
           <div className="pt-8">
-            {isLoading && !searchPerformed && (
-              <div className="flex justify-center items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            {isLoading && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                 {Array.from({ length: 6 }).map((_, index) => (
+                    <ContentCardSkeleton key={`skeleton-search-${index}`} />
+                 ))}
               </div>
             )}
             
-            {searchPerformed && (
+            {searchPerformed && !isLoading && (
               <>
                 {results.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
@@ -279,3 +260,4 @@ export default function Home() {
       </footer>
     </div>
   );
+}

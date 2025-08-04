@@ -1,18 +1,16 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import ContentCard from '@/components/content-card';
-import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { getM3UItems } from '@/lib/m3u';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
-import { Button } from '@/components/ui/button';
 import { CorrectionDialog } from '@/components/correction-dialog';
+import { M3uContext } from '@/contexts/M3uContext';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -23,31 +21,9 @@ interface EnrichedM3UItem extends M3UItem {
 
 export default function CorrectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [m3uItems, setM3uItems] = useState<M3UItem[]>([]);
+  const { m3uItems, isLoading } = useContext(M3uContext);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
 
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchM3uData = async () => {
-      setIsLoading(true);
-      try {
-        const items = await getM3UItems();
-        setM3uItems(items);
-      } catch (error) {
-        console.error("Failed to load M3U list:", error);
-        toast({
-          title: 'Erro ao carregar lista local',
-          description: 'Não foi possível carregar la lista de conteúdos existentes. Tente recarregar a página.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchM3uData();
-  }, [toast]);
 
   const normalizeTitle = (title: string): string => {
     return title
@@ -60,7 +36,6 @@ export default function CorrectionPage() {
   
   const searchTmdbForDetails = async (item: M3UItem): Promise<M3UItem> => {
     try {
-      // Prioritize movie search if category is movie, otherwise tv, then multi
       const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
       let searchType = 'multi';
       if (item.category.toLowerCase().includes('filme')) {
@@ -72,7 +47,7 @@ export default function CorrectionPage() {
       const searchUrl = `https://api.themoviedb.org/3/search/${searchType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
         cleanedTitle
       )}&language=pt-BR`;
-
+      
       const response = await fetch(searchUrl);
 
       if (!response.ok) return item;
@@ -90,7 +65,7 @@ export default function CorrectionPage() {
       return item;
     } catch (error) {
       console.error('Error fetching from TMDB for details:', error);
-      return item; // Return original item on fetch error
+      return item; 
     }
   };
 
@@ -206,5 +181,4 @@ export default function CorrectionPage() {
       </footer>
     </div>
   );
-
-    
+}
