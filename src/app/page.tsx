@@ -236,9 +236,10 @@ export default function Home() {
                                  Solicitado
                               </Button>
                            ) : (
-                              <Badge variant="secondary" className="w-full justify-center text-center py-2 px-1 cursor-default">
-                                 {item.existingCategory}
-                              </Badge>
+                              <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
+                                <p className="font-bold">Já está no sistema</p>
+                                <p className="truncate">em: {item.existingCategory}</p>
+                              </div>
                            )}
                          </div>
                        )
@@ -269,5 +270,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
