@@ -21,12 +21,13 @@ export const M3uProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const loadItems = async () => {
+      setIsLoading(true);
       try {
         const items = await getM3UItems();
         setM3uItems(items);
       } catch (error) {
         console.error("Failed to load M3U items for context:", error);
-        setM3uItems([]); // Ensure it's an array even on error
+        setM3uItems([]); // Ensure it's an array on error
       } finally {
         setIsLoading(false);
       }

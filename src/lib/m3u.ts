@@ -3,9 +3,10 @@
 
 import type { M3UItem } from './types';
 
-// The server URL and API key are now securely accessed from environment variables
+// The server URL and credentials are now securely accessed from environment variables
 const API_URL = process.env.XUI_API_URL;
-const API_KEY = process.env.XUI_API_KEY;
+const USERNAME = process.env.XUI_USERNAME;
+const PASSWORD = process.env.XUI_PASSWORD;
 
 interface XuiOneVodInfo {
   name: string;
@@ -23,21 +24,21 @@ interface XuiOneCategory {
 
 // This function fetches all VOD content (movies and series) from the XUI One API
 export async function getM3UItems(): Promise<M3UItem[]> {
-  if (!API_URL || !API_KEY) {
-    console.error('XUI One API URL or Key is not configured in environment variables.');
+  if (!API_URL || !USERNAME || !PASSWORD) {
+    console.error('XUI One API URL or credentials are not configured in environment variables.');
     return [];
   }
 
   try {
     // Construct the API URL for fetching VOD streams
-    const apiUrl = `${API_URL}/player_api.php?username=placeholder&password=placeholder&action=get_vod_streams&api_key=${API_KEY}`;
+    const apiUrl = `${API_URL}/player_api.php?username=${USERNAME}&password=${PASSWORD}&action=get_vod_streams`;
     
     // Fetch categories in parallel to map category IDs to names
-    const categoriesUrl = `${API_URL}/player_api.php?username=placeholder&password=placeholder&action=get_vod_categories&api_key=${API_KEY}`;
+    const categoriesUrl = `${API_URL}/player_api.php?username=${USERNAME}&password=${PASSWORD}&action=get_vod_categories`;
     
     const [vodResponse, categoriesResponse] = await Promise.all([
-      fetch(apiUrl, { next: { revalidate: 14400 } }), // Cache for 4 hours
-      fetch(categoriesUrl, { next: { revalidate: 14400 } })
+      fetch(apiUrl, { next: { revalidate: 600 } }), // Cache for 10 minutes
+      fetch(categoriesUrl, { next: { revalidate: 600 } })
     ]);
 
 
@@ -50,11 +51,11 @@ export async function getM3UItems(): Promise<M3UItem[]> {
       return [];
     }
 
-    const vodData: XuiOneVodInfo[] = await vodResponse.json();
+    const vodData: XuiOneVodInfo[] | { user_info?: any, server_info?: any } = await vodResponse.json();
     const categoryData: XuiOneCategory[] = await categoriesResponse.json();
 
     if (!Array.isArray(vodData)) {
-      console.error("VOD API did not return an array.");
+      console.error("VOD API did not return an array. It might have returned an auth object instead.");
       return [];
     }
      if (!Array.isArray(categoryData)) {
@@ -75,7 +76,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
         const categoryName = item.category_id ? categoryMap.get(item.category_id) : 'Desconhecida';
         
         // Exclude live channels if they appear in the VOD list
-        if (categoryName && categoryName.toLowerCase().includes('canais')) {
+        if (categoryName && (categoryName.toLowerCase().includes('canais') || categoryName.toLowerCase().includes('live'))) {
           return null;
         }
 

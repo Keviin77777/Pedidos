@@ -148,7 +148,10 @@ export default function Home() {
 
       const normalizedM3uMap = new Map<string, M3UItem>();
       m3uItemsCache.forEach(item => {
-        normalizedM3uMap.set(normalizeTitle(item.name), item);
+        const normalizedName = normalizeTitle(item.name);
+        if (!normalizedM3uMap.has(normalizedName)) {
+            normalizedM3uMap.set(normalizedName, item);
+        }
       });
 
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
