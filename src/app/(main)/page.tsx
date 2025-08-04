@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Sparkles } from 'lucide-react';
 import ContentCard from '@/components/content-card';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,7 +15,9 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
-import { saveContentRequest } from '@/lib/admin';
+import { saveContentRequest, getContentRequests } from '@/lib/admin';
+import type { ContentRequest } from '@/lib/admin';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
@@ -33,9 +35,18 @@ export default function Home() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
+  const [addedItems, setAddedItems] = useState<ContentRequest[]>([]);
 
   const { m3uItems: m3uItemsCache, isLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Load added items on initial mount and when a new item is requested
+    const allRequests = getContentRequests();
+    setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
+    const requested = new Set(allRequests.map(r => r.title));
+    setRequestedItems(requested);
+  }, []);
 
   const handleRequest = (item: M3UItem) => {
     saveContentRequest({
@@ -254,6 +265,51 @@ export default function Home() {
               </>
             )}
           </div>
+          
+          <div className="pt-16">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="added-items">
+                <AccordionTrigger className="text-xl font-semibold text-primary hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-6 h-6" />
+                    <span>Pedidos Adicionados Recentemente</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-6">
+                  {addedItems.length > 0 ? (
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                       {addedItems.map((item) => (
+                         <div key={item.id} className="flex flex-col gap-2 items-center">
+                            <ContentCard item={{
+                                name: item.title,
+                                logo: item.logo,
+                                category: item.type,
+                                url: '',
+                                synopsis: `Pedido em: ${new Date(item.requestedAt).toLocaleDateString()}`
+                            }} />
+                             <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
+                                <p className="font-bold">Adicionado!</p>
+                              </div>
+                         </div>
+                       ))}
+                     </div>
+                  ) : (
+                    <Card className="text-center py-10 px-6 border-dashed bg-card">
+                        <CardContent>
+                            <h3 className="text-xl font-semibold text-card-foreground mb-2">
+                                Nenhuma novidade por aqui... ainda!
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Assim que seus pedidos forem atendidos, eles aparecerão nesta seção.
+                            </p>
+                        </CardContent>
+                    </Card>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+
         </div>
       </div>
       <footer className="text-center p-4 text-muted-foreground text-sm">

@@ -3,7 +3,7 @@
 
 // ======== TYPES ========
 
-interface ContentRequest {
+export interface ContentRequest {
   id: string;
   title: string;
   type: string;
@@ -13,7 +13,7 @@ interface ContentRequest {
   status: 'Pendente' | 'Adicionado';
 }
 
-interface ProblemReport {
+export interface ProblemReport {
   id: string;
   title: string;
   problem: string;
