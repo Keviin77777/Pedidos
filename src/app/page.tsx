@@ -53,6 +53,7 @@ export default function Home() {
     if (!title) return '';
     return title
       .toLowerCase()
+      .split(':')[0] // Remove subtitles after a colon
       .replace(/\s*(s\d{2}e\d{2}|s\d{1,2}|t\d{1,2}e\d{1,2}).*$/i, '')
       .replace(/\s*\(\d{4}\)\s*$/, '') 
       .normalize('NFD') 
