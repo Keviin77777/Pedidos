@@ -39,13 +39,28 @@ export default function Home() {
   const { m3uItems: m3uItemsCache, isLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Load added items on initial mount and when a new item is requested
+  const loadAndSetRequests = useCallback(() => {
     const allRequests = getContentRequests();
     setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
     const requested = new Set(allRequests.map(r => r.title));
     setRequestedItems(requested);
   }, []);
+  
+  useEffect(() => {
+    loadAndSetRequests();
+  
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'cineassist_content_requests') {
+        loadAndSetRequests();
+      }
+    };
+  
+    window.addEventListener('storage', handleStorageChange);
+  
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [loadAndSetRequests]);
 
   const handleRequest = (item: M3UItem) => {
     saveContentRequest({
@@ -57,7 +72,11 @@ export default function Home() {
       title: 'Pedido Enviado!',
       description: `Recebemos seu pedido para "${item.name}".`,
     });
+    // Optimistically update the state
     setRequestedItems(prev => new Set(prev).add(item.name));
+    setResults(prev => 
+      prev.map(r => r.name === item.name ? {...r, status: 'requested'} : r)
+    );
   };
 
   const normalizeTitle = (title: string | null | undefined): string => {
