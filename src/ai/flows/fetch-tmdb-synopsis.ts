@@ -63,23 +63,13 @@ const fetchSynopsisTool = ai.defineTool({
   }
 });
 
-const fetchTmdbSynopsisPrompt = ai.definePrompt({
-  name: 'fetchTmdbSynopsisPrompt',
-  tools: [fetchSynopsisTool],
-  input: {schema: FetchTmdbSynopsisInputSchema},
-  output: {schema: FetchTmdbSynopsisOutputSchema},
-  prompt: `Use the fetchSynopsis tool to find a synopsis for the title: {{{title}}}.`,
-});
-
 const fetchTmdbSynopsisFlow = ai.defineFlow(
   {
     name: 'fetchTmdbSynopsisFlow',
     inputSchema: FetchTmdbSynopsisInputSchema,
     outputSchema: FetchTmdbSynopsisOutputSchema,
   },
-  async input => {
-    const { output } = await fetchTmdbSynopsisPrompt(input);
-    return output!;
+  async (input) => {
+    return await fetchSynopsisTool(input);
   }
 );
-
