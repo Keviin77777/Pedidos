@@ -77,6 +77,12 @@ export const updateContentRequestStatus = (id: string, status: ContentRequest['s
     }
 }
 
+export const deleteContentRequest = (id: string): void => {
+    let requests = getContentRequests();
+    requests = requests.filter(req => req.id !== id);
+    saveToStorage(REQUESTS_KEY, requests);
+};
+
 
 // ======== PROBLEM REPORTS ========
 

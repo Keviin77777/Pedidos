@@ -22,12 +22,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import {
+  deleteContentRequest,
   getContentRequests,
   getProblemReports,
   updateContentRequestStatus,
   updateProblemReportStatus
 } from '@/lib/admin';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 
 interface ContentRequest {
@@ -58,16 +59,27 @@ export default function AdminDashboard() {
     setRequests(getContentRequests());
     setReports(getProblemReports());
   }, []);
+  
+  const refreshData = () => {
+    setRequests(getContentRequests());
+    setReports(getProblemReports());
+  };
 
   const handleRequestStatusChange = (id: string, status: 'Pendente' | 'Adicionado') => {
     updateContentRequestStatus(id, status);
-    setRequests(getContentRequests()); // Refresh state
+    refreshData();
   };
   
   const handleReportStatusChange = (id: string, status: 'Aberto' | 'Resolvido') => {
     updateProblemReportStatus(id, status);
-    setReports(getProblemReports()); // Refresh state
+    refreshData();
   };
+
+  const handleRequestDelete = (id: string) => {
+    // We could add a confirmation dialog here in the future
+    deleteContentRequest(id);
+    refreshData();
+  }
 
   return (
     <>
@@ -150,6 +162,13 @@ export default function AdminDashboard() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Pendente')}>
                                   Marcar como Pendente
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  onClick={() => handleRequestDelete(req.id)}
+                                >
+                                  Remover Pedido
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
