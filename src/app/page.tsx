@@ -8,7 +8,7 @@ export default async function Home() {
   const items: M3UItem[] = await getM3UItems();
 
   const itemsWithSynopsis = await Promise.all(
-    items.map(async (item) => {
+    items.slice(0, 50).map(async (item) => {
       const synopsis = await getSynopsis(item.name);
       return { ...item, synopsis };
     })

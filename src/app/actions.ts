@@ -6,25 +6,25 @@ export async function getSynopsis(title: string) {
   try {
     const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
       title
-    )}`;
+    )}&language=pt-BR`;
     const response = await fetch(searchUrl);
 
     if (!response.ok) {
       console.error(`TMDB API error: ${response.status} ${response.statusText}`);
-      return 'Could not retrieve synopsis.';
+      return 'Não foi possível obter a sinopse.';
     }
 
     const data = await response.json();
 
     if (data.results && data.results.length > 0) {
       const firstResult = data.results[0];
-      const synopsis = firstResult.overview || 'No synopsis available.';
+      const synopsis = firstResult.overview || 'Nenhuma sinopse disponível.';
       return synopsis;
     }
     
-    return 'No synopsis available.';
+    return 'Nenhuma sinopse disponível.';
   } catch (error) {
     console.error('Error fetching synopsis:', error);
-    return 'Could not retrieve synopsis.';
+    return 'Não foi possível obter a sinopse.';
   }
 }
