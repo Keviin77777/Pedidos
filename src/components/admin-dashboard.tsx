@@ -32,6 +32,7 @@ import type { ContentRequest, ProblemReport } from '@/lib/admin';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MarkAsAddedDialog } from './mark-as-added-dialog';
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<ContentRequest[]>([]);
@@ -72,10 +73,10 @@ export default function AdminDashboard() {
     };
   }, [toast]);
 
-  const handleRequestStatusChange = async (id: string, status: 'Pendente' | 'Adicionado') => {
+  const handleSetToPending = async (id: string) => {
     try {
-      await updateContentRequestStatus(id, status);
-      toast({ title: 'Status Alterado', description: `O pedido foi marcado como ${status.toLowerCase()}.` });
+      await updateContentRequestStatus(id, 'Pendente');
+      toast({ title: 'Status Alterado', description: 'O pedido foi marcado como Pendente.' });
     } catch(e) {
       toast({ title: 'Erro ao Alterar Status', description: 'Não foi possível alterar o status do pedido.', variant: 'destructive' });
     }
@@ -183,6 +184,9 @@ export default function AdminDashboard() {
                               <div>
                                 <div className="font-medium">{req.title}</div>
                                 {req.notes && <div className="text-sm text-muted-foreground">Obs: {req.notes}</div>}
+                                {req.status === 'Adicionado' && req.addedToCategory && (
+                                  <div className="text-xs text-primary/80">Adicionado em: {req.addedToCategory}</div>
+                                )}
                               </div>
                           </div>
                       </TableCell>
@@ -207,10 +211,12 @@ export default function AdminDashboard() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Adicionado')}>
-                                Marcar como Adicionado
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Pendente')}>
+                              <MarkAsAddedDialog requestId={req.id} requestTitle={req.title}>
+                                <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                  Marcar como Adicionado
+                                </div>
+                              </MarkAsAddedDialog>
+                              <DropdownMenuItem onClick={() => handleSetToPending(req.id)}>
                                 Marcar como Pendente
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />

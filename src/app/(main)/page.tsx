@@ -312,6 +312,7 @@ export default function Home() {
                             }} />
                              <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
                                 <p className="font-bold">Adicionado!</p>
+                                {item.addedToCategory && <p className="truncate">Em: {item.addedToCategory}</p>}
                               </div>
                          </div>
                        ))}

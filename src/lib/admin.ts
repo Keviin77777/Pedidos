@@ -26,6 +26,7 @@ export interface ContentRequest {
   notes?: string;
   requestedAt: string; // Storing as ISO string for simplicity
   status: 'Pendente' | 'Adicionado';
+  addedToCategory?: string;
 }
 
 export interface ProblemReport {
@@ -98,9 +99,14 @@ export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'r
   await addDoc(requestsCollection, newRequest);
 };
 
-export const updateContentRequestStatus = async (id: string, status: ContentRequest['status']): Promise<void> => {
+export const updateContentRequestStatus = async (id: string, status: 'Pendente'): Promise<void> => {
     const requestDoc = doc(db, 'content-requests', id);
-    await updateDoc(requestDoc, { status });
+    await updateDoc(requestDoc, { status, addedToCategory: '' }); // Clear category when moving back to pending
+}
+
+export const markRequestAsAdded = async (id: string, category: string): Promise<void> => {
+  const requestDoc = doc(db, 'content-requests', id);
+  await updateDoc(requestDoc, { status: 'Adicionado', addedToCategory: category });
 }
 
 export const deleteContentRequest = async (id: string): Promise<void> => {
