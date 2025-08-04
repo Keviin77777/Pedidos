@@ -17,11 +17,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'http',
-        hostname: 'dnscine.top',
-        port: '80',
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+        port: '',
         pathname: '/**',
-      }
+      },
     ],
   },
 };
