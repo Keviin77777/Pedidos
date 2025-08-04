@@ -9,13 +9,14 @@ import ContentCard from '@/components/content-card';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
-import { ManualRequestDialog } from '@/components/request-dialog';
+import { ManualRequestDialog } from '@/components/manual-request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
-import { saveContentRequest, onRequestsUpdated } from '@/lib/admin';
+import { onRequestsUpdated } from '@/lib/admin';
 import type { ContentRequest } from '@/lib/admin';
+import { RequestWithNotesDialog } from '@/components/request-with-notes-dialog';
 
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
@@ -55,27 +56,6 @@ export default function Home() {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [toast]);
-
-  const handleRequest = async (item: M3UItem) => {
-    try {
-      await saveContentRequest({
-        title: item.name,
-        type: item.category,
-        logo: item.logo,
-      });
-      toast({
-        title: 'Pedido Enviado!',
-        description: `Recebemos seu pedido para "${item.name}".`,
-      });
-      // The onRequestsUpdated listener will handle the state update automatically
-    } catch (error) {
-       toast({
-        title: 'Erro ao Enviar',
-        description: 'Não foi possível enviar seu pedido. Tente novamente.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const normalizeTitle = (title: string | null | undefined): string => {
     if (!title) return '';
@@ -247,12 +227,11 @@ export default function Home() {
                          <div key={`result-${index}`} className="flex flex-col gap-2 items-center">
                            <ContentCard item={item} showCategory={item.status !== 'existing'} />
                            {item.status === 'requestable' ? (
-                              <Button 
-                                 className="w-full" 
-                                 onClick={() => handleRequest(item)}
-                              >
-                                 Solicitar
-                              </Button>
+                             <RequestWithNotesDialog item={item}>
+                               <Button className="w-full">
+                                  Solicitar
+                               </Button>
+                             </RequestWithNotesDialog>
                            ) : item.status === 'requested' ? (
                               <Button variant="outline" disabled className="w-full cursor-default">
                                   <Check className="mr-2 h-4 w-4" />
