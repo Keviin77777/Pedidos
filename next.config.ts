@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'dnscine.top',
+        port: '80',
+        pathname: '/**',
+      }
     ],
   },
 };
