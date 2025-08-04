@@ -134,9 +134,7 @@ export default function Home() {
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
         
-        const isExisting = Array.from(normalizedM3uTitles).some(m3uTitle => 
-            m3uTitle.includes(normalizedTmdbTitle) || normalizedTmdbTitle.includes(m3uTitle)
-        );
+        const isExisting = normalizedM3uTitles.has(normalizedTmdbTitle);
         
         return {
           ...tmdbItem,
@@ -254,3 +252,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
