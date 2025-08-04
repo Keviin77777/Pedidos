@@ -1,3 +1,6 @@
+
+'use server';
+
 import type { M3UItem } from './types';
 
 const M3U_URL = 'http://dnscine.top:80/playlist/Vodsm3u789DS/w5NwV8dPXE/m3u_plus';
@@ -36,6 +39,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
 
     if (!response.ok) {
       console.error('Failed to fetch M3U playlist:', response.statusText);
+      // Return empty array to allow TMDB fallback
       return [];
     }
 
@@ -70,7 +74,8 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     return items;
   } catch (error) {
     console.error('Error fetching or parsing M3U playlist:', error);
-    // Return empty array to allow TMDB fallback
+    // On any error, return an empty array to ensure the app doesn't crash
+    // and can proceed with TMDB search.
     return [];
   }
 }

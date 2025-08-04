@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import type { M3UItem } from '@/lib/types';
-import { getM3UItems } from '@/lib/m3u';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import { Search } from 'lucide-react';
 import ContentCard from '@/components/content-card';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
+import { getM3UItems } from '@/lib/m3u';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -69,9 +69,9 @@ export default function Home() {
         return;
       }
       
-      // 2. Fetch M3U items, but don't let it crash the app
+      // 2. Fetch M3U items from server action, but don't let it crash the app
       let m3uItems: M3UItem[] = [];
-      try {
+       try {
         m3uItems = await getM3UItems();
       } catch (e) {
         console.error("Could not fetch M3U list, continuing without it.", e);
@@ -84,7 +84,6 @@ export default function Home() {
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
         
-        // Check if any M3U title is included in the TMDB title or vice-versa, for better matching
         const isExisting = Array.from(normalizedM3uTitles).some(m3uTitle => 
             normalizedTmdbTitle.includes(m3uTitle) || m3uTitle.includes(normalizedTmdbTitle)
         );
