@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useTransition } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getM3UItems } from '@/lib/m3u';
+import { M3uContext } from '@/contexts/M3uContext';
 
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
@@ -33,6 +33,7 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
 
+  const { m3uItems: m3uItemsCache, isLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
 
   const handleRequest = (item: M3UItem) => {
@@ -91,7 +92,7 @@ export default function Home() {
   };
 
   const handleSearch = useCallback(async (query: string, type: string) => {
-    if (query.trim().length < 3) {
+    if (isM3uLoading || query.trim().length < 3) {
       setResults([]);
       setSearchPerformed(false);
       return;
@@ -101,11 +102,7 @@ export default function Home() {
     setSearchPerformed(true);
 
     try {
-      // Fetch TMDB and M3U in parallel
-      const [tmdbResults, m3uItemsCache] = await Promise.all([
-        searchTmdb(query, type),
-        getM3UItems() 
-      ]);
+      const tmdbResults = await searchTmdb(query, type);
       
       if (tmdbResults.length === 0) {
         setResults([]);
@@ -145,7 +142,7 @@ export default function Home() {
     } finally {
         setIsLoading(false);
     }
-  }, [toast, requestedItems]);
+  }, [toast, requestedItems, m3uItemsCache, isM3uLoading]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -182,6 +179,7 @@ export default function Home() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
+                disabled={isM3uLoading}
               />
                {isLoading && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">

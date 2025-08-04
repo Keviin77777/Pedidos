@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import ContentCard from '@/components/content-card';
 import { Card, CardContent } from '@/components/ui/card';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { CorrectionDialog } from '@/components/correction-dialog';
-import { getM3UItems } from '@/lib/m3u';
+import { M3uContext } from '@/contexts/M3uContext';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -23,16 +23,8 @@ export default function CorrectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
-  const [m3uItemsCache, setM3uItemsCache] = useState<M3UItem[]>([]);
-  const [isCacheLoading, setIsCacheLoading] = useState(true);
+  const { m3uItems: m3uItemsCache, isLoading: isCacheLoading } = useContext(M3uContext);
 
-  // Load the M3U cache once on component mount
-  useEffect(() => {
-    getM3UItems().then(items => {
-      setM3uItemsCache(items);
-      setIsCacheLoading(false);
-    });
-  }, []);
 
   const normalizeTitle = (title: string): string => {
     return title
