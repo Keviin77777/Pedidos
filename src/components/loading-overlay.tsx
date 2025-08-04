@@ -17,9 +17,10 @@ export default function LoadingOverlay() {
           if (oldProgress >= 95) {
             return 95;
           }
+          // Increase progress faster
           return Math.min(oldProgress + Math.random() * 20, 95);
         });
-      }, 300);
+      }, 150); // Update progress more frequently
       return () => clearInterval(timer);
     } else {
       setProgress(100);
