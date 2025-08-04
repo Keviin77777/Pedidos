@@ -1,196 +1,83 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import AdminDashboard from '@/components/admin-dashboard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  getContentRequests,
-  getProblemReports,
-  updateContentRequestStatus,
-  updateProblemReportStatus
-} from '@/lib/admin';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Shield } from 'lucide-react';
 
+export default function AdminLoginPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-export default function AdminDashboard() {
-  const [requests, setRequests] = useState<ReturnType<typeof getContentRequests>>([]);
-  const [reports, setReports] = useState<ReturnType<typeof getProblemReports>>([]);
-  
-  // Use effect to load data on the client side
-  useEffect(() => {
-    setRequests(getContentRequests());
-    setReports(getProblemReports());
-  }, []);
-
-  const handleRequestStatusChange = (id: string, status: 'Pendente' | 'Adicionado') => {
-    updateContentRequestStatus(id, status);
-    setRequests(getContentRequests()); // Refresh state
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simple hardcoded credentials for now
+    if (username === 'admin' && password === 'admin') {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Credenciais inválidas. Tente novamente.');
+    }
   };
-  
-  const handleReportStatusChange = (id: string, status: 'Aberto' | 'Resolvido') => {
-    updateProblemReportStatus(id, status);
-    setReports(getProblemReports()); // Refresh state
-  };
+
+  if (isAuthenticated) {
+    return <AdminDashboard />;
+  }
 
   return (
-    <>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Painel Admin</h1>
-          <p className="text-muted-foreground">
-            Gerencie as solicitações de novos conteúdos e os relatórios de problemas.
-          </p>
-        </div>
-        <Tabs defaultValue="requests">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="requests">Solicitações de Conteúdo</TabsTrigger>
-            <TabsTrigger value="reports">Relatórios de Problemas</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="requests">
-            <Card>
-              <CardHeader>
-                <CardTitle>Solicitações de Conteúdo</CardTitle>
-                <CardDescription>
-                  Pedidos de novos filmes e séries feitos pelos usuários.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Título</TableHead>
-                      <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                      <TableHead className="hidden md:table-cell">Data</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((req) => (
-                      <TableRow key={req.id}>
-                        <TableCell>
-                            <div className="font-medium">{req.title}</div>
-                            {req.notes && <div className="hidden text-sm text-muted-foreground md:inline">Obs: {req.notes}</div>}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{req.type}</TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {new Date(req.requestedAt).toLocaleDateString("pt-BR", {
-                            day: '2-digit', month: '2-digit', year: 'numeric'
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={req.status === 'Pendente' ? 'destructive' : 'secondary'}
-                          >
-                            {req.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="ghost">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Adicionado')}>
-                                  Marcar como Adicionado
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleRequestStatusChange(req.id, 'Pendente')}>
-                                  Marcar como Pendente
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <Card>
-              <CardHeader>
-                <CardTitle>Relatórios de Problemas</CardTitle>
-                <CardDescription>
-                  Problemas em conteúdos existentes reportados pelos usuários.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Título do Conteúdo</TableHead>
-                      <TableHead>Problema Descrito</TableHead>
-                      <TableHead className="hidden md:table-cell">Data</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell className="font-medium">{report.title}</TableCell>
-                        <TableCell>{report.problem}</TableCell>
-                        <TableCell className="hidden md:table-cell">
-                           {new Date(report.reportedAt).toLocaleDateString("pt-BR", {
-                            day: '2-digit', month: '2-digit', year: 'numeric'
-                          })}
-                        </TableCell>
-                         <TableCell>
-                           <Badge 
-                            variant={report.status === 'Aberto' ? 'destructive' : 'secondary'}
-                          >
-                            {report.status}
-                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                           <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="ghost">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleReportStatusChange(report.id, 'Resolvido')}>
-                                  Marcar como Resolvido
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleReportStatusChange(report.id, 'Aberto')}>
-                                  Marcar como Aberto
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </>
+    <main className="flex min-h-screen flex-col items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <div className="flex justify-center items-center mb-4">
+             <Shield className="w-10 h-10 text-primary" />
+          </div>
+          <CardTitle className="text-2xl">Painel Admin</CardTitle>
+          <CardDescription>
+            Faça login para gerenciar o conteúdo.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Usuário</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-center font-medium text-destructive">
+                {error}
+              </p>
+            )}
+            <Button type="submit" className="w-full">
+              Entrar
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </main>
   );
 }
+
