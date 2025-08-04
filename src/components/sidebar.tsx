@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
-  { href: '/admin', label: 'Painel Admin', icon: Shield },
 ];
 
 const Sidebar = () => {
