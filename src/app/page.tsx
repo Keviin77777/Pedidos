@@ -16,7 +16,7 @@ const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface SearchResult extends M3UItem {
-  status: 'existing' | 'requestable' | 'not_found';
+  status: 'existing' | 'requestable';
 }
 
 export default function Home() {
@@ -35,78 +35,15 @@ export default function Home() {
     });
   };
 
-  const normalizeTitle = (title: string) => {
+  const normalizeTitle = (title: string | null | undefined): string => {
     if (!title) return '';
     return title
       .toLowerCase()
-      .replace(/\s*\(\d{4}\)\s*/, '') // Remove (year)
+      .replace(/\s*\(\d{4}\)\s*$/, '') // Remove (year) only from the end
       .normalize('NFD') // Decompose accents
       .replace(/[\u0300-\u036f]/g, '') // Remove accent characters
+      .replace(/[^\w\s]/gi, '') // Remove special characters
       .trim();
-  };
-
-  const handleSearch = async () => {
-    if (searchQuery.trim() === '') {
-      toast({
-        title: 'Busca inválida',
-        description: 'Por favor, digite um título para buscar.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setSearchPerformed(false);
-    setResults([]);
-
-    try {
-      // 1. Fetch from TMDB first
-      const tmdbResults = await searchTmdb(searchQuery);
-
-      if (tmdbResults.length === 0) {
-        setSearchPerformed(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      // 2. Fetch M3U items from server action, but don't let it crash the app
-      let m3uItems: M3UItem[] = [];
-       try {
-        m3uItems = await getM3UItems();
-      } catch (e) {
-        console.error("Could not fetch M3U list, continuing without it.", e);
-        // m3uItems will be an empty array, so all TMDB results will be 'requestable'
-      }
-
-      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
-
-      // 3. Process results: check if TMDB results exist in M3U
-      const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
-        const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
-        
-        const isExisting = Array.from(normalizedM3uTitles).some(m3uTitle => 
-            normalizedTmdbTitle.includes(m3uTitle) || m3uTitle.includes(normalizedTmdbTitle)
-        );
-
-        return {
-          ...tmdbItem,
-          status: isExisting ? 'existing' : 'requestable',
-        };
-      });
-
-      setResults(processedResults);
-
-    } catch (error) {
-      console.error("Error during search:", error);
-      toast({
-        title: 'Erro na Busca',
-        description: 'Ocorreu um erro ao buscar no TMDB. Tente novamente mais tarde.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-      setSearchPerformed(true);
-    }
   };
   
   const searchTmdb = async (title: string): Promise<M3UItem[]> => {
@@ -141,6 +78,63 @@ export default function Home() {
     }
   };
 
+
+  const handleSearch = async () => {
+    if (searchQuery.trim() === '') {
+      toast({
+        title: 'Busca inválida',
+        description: 'Por favor, digite um título para buscar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setSearchPerformed(false);
+    setResults([]);
+
+    try {
+      const tmdbResults = await searchTmdb(searchQuery);
+
+      if (tmdbResults.length === 0) {
+        setSearchPerformed(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      let m3uItems: M3UItem[] = [];
+      try {
+        m3uItems = await getM3UItems();
+      } catch (e) {
+        console.error("Could not fetch M3U list, continuing without it.", e);
+      }
+
+      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
+
+      const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
+        const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
+        const isExisting = normalizedM3uTitles.has(normalizedTmdbTitle);
+        
+        return {
+          ...tmdbItem,
+          status: isExisting ? 'existing' : 'requestable',
+        };
+      });
+
+      setResults(processedResults);
+
+    } catch (error) {
+      console.error("Error during search:", error);
+      toast({
+        title: 'Erro na Busca',
+        description: 'Ocorreu um erro ao buscar. Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+      setSearchPerformed(true);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
