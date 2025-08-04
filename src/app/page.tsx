@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import ContentCard from '@/components/content-card';
@@ -13,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getM3UItems } from '@/lib/m3u';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { ManualRequestDialog } from '@/components/request-dialog';
+import { Button } from '@/components/ui/button';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -63,10 +63,10 @@ export default function Home() {
     if (!title) return '';
     return title
       .toLowerCase()
-      .replace(/\s*\(\d{4}\)\s*$/, '') // Remove (year) only from the end
-      .normalize('NFD') // Decompose accents
-      .replace(/[\u0300-\u036f]/g, '') // Remove accent characters
-      .replace(/[^\w\s]/gi, '') // Remove special characters
+      .replace(/\s*\(\d{4}\)\s*$/, '') 
+      .normalize('NFD') 
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/gi, '') 
       .trim();
   };
   
@@ -167,7 +167,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <div className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
@@ -244,7 +244,7 @@ export default function Home() {
             )}
           </div>
         </div>
-      </main>
+      </div>
       <footer className="text-center p-4 text-muted-foreground text-sm">
         <p>CineAssist &copy; {new Date().getFullYear()}</p>
       </footer>

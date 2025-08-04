@@ -1,11 +1,10 @@
-import { Clapperboard } from 'lucide-react';
+
 
 const Header = () => {
   return (
-    <header className="bg-primary text-primary-foreground shadow-md">
+    <header className="bg-card/30 backdrop-blur-lg border-b sticky top-0 z-10">
       <div className="container mx-auto px-4 py-4 flex items-center">
-        <Clapperboard className="w-8 h-8 mr-3" />
-        <h1 className="text-3xl font-bold tracking-tight">CineAssist</h1>
+        {/* Content can be added here later if needed */}
       </div>
     </header>
   );
