@@ -13,12 +13,13 @@ import { getM3UItems } from '@/lib/m3u';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { ManualRequestDialog } from '@/components/request-dialog';
 import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface SearchResult extends M3UItem {
-  status: 'existing' | 'requestable' | 'loading';
+  status: 'existing' | 'requestable' | 'loading' | 'requested';
 }
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [m3uItemsCache, setM3uItemsCache] = useState<M3UItem[]>([]);
   const [isCacheLoading, setIsCacheLoading] = useState(true);
+  const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
 
   const { toast } = useToast();
 
@@ -57,6 +59,7 @@ export default function Home() {
       title: 'Pedido Enviado!',
       description: `Recebemos seu pedido para "${item.name}".`,
     });
+    setRequestedItems(prev => new Set(prev).add(item.name));
   };
 
   const normalizeTitle = (title: string | null | undefined): string => {
@@ -131,13 +134,16 @@ export default function Home() {
 
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
-        
         const isExisting = normalizedM3uTitles.has(normalizedTmdbTitle);
-        
-        return {
-          ...tmdbItem,
-          status: isExisting ? 'existing' : 'requestable',
-        };
+        const isRequested = requestedItems.has(tmdbItem.name);
+
+        if (isRequested) {
+            return {...tmdbItem, status: 'requested'};
+        }
+        if (isExisting) {
+            return {...tmdbItem, status: 'existing'};
+        }
+        return {...tmdbItem, status: 'requestable'};
       });
 
       setResults(processedResults);
@@ -153,7 +159,7 @@ export default function Home() {
     } finally {
         setIsLoading(false);
     }
-  }, [toast, m3uItemsCache]);
+  }, [toast, m3uItemsCache, requestedItems]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -216,6 +222,11 @@ export default function Home() {
                                  onClick={() => handleRequest(item)}
                               >
                                  Solicitar
+                              </Button>
+                           ) : item.status === 'requested' ? (
+                              <Button variant="outline" disabled className="w-full cursor-default">
+                                  <Check className="mr-2 h-4 w-4" />
+                                 Solicitado
                               </Button>
                            ) : (
                               <Button variant="secondary" disabled className="w-full cursor-default">

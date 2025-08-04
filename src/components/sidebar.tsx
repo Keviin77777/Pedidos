@@ -3,12 +3,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Clapperboard, Home, Wrench } from 'lucide-react';
+import { Clapperboard, Home, Wrench, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
+  { href: '/admin', label: 'Painel Admin', icon: Shield },
 ];
 
 const Sidebar = () => {
