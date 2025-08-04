@@ -11,12 +11,13 @@ import ContentCard from '@/components/content-card';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { getM3UItems } from '@/lib/m3u';
+import ContentCardSkeleton from '@/components/content-card-skeleton';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface SearchResult extends M3UItem {
-  status: 'existing' | 'requestable';
+  status: 'existing' | 'requestable' | 'loading';
 }
 
 export default function Home() {
@@ -87,31 +88,40 @@ export default function Home() {
     }
 
     setIsLoading(true);
-    setSearchPerformed(false);
-    
+    setSearchPerformed(true);
+
     try {
       const tmdbResults = await searchTmdb(query);
-
+      
       if (tmdbResults.length === 0) {
         setResults([]);
         setSearchPerformed(true);
         setIsLoading(false);
         return;
       }
-      
+
+      // Set initial results to loading state
+      const initialResults: SearchResult[] = tmdbResults.map(item => ({...item, status: 'loading'}));
+      setResults(initialResults);
+      setIsLoading(false);
+
+
+      // Now fetch M3U list and update statuses
       let m3uItems: M3UItem[] = [];
       try {
         m3uItems = await getM3UItems();
       } catch (e) {
         console.error("Could not fetch M3U list, continuing without it.", e);
+        // If M3U fails, all items are requestable
+        setResults(tmdbResults.map(item => ({...item, status: 'requestable'})));
+        return;
       }
-
-      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
       
+      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
+
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
         
-        // A more robust check: see if any m3u title is very similar to the tmdb title
         const isExisting = Array.from(normalizedM3uTitles).some(m3uTitle => 
             m3uTitle.includes(normalizedTmdbTitle) || normalizedTmdbTitle.includes(m3uTitle)
         );
@@ -131,28 +141,27 @@ export default function Home() {
         description: 'Ocorreu um erro ao buscar. Tente novamente mais tarde.',
         variant: 'destructive',
       });
-    } finally {
+      setResults([]);
       setIsLoading(false);
-      setSearchPerformed(true);
     }
   }, [toast]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       handleSearch(searchQuery);
-    }, 500)
+    }, 500);
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [searchQuery, handleSearch])
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, handleSearch]);
 
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-tight">Solicitar um Filme ou Série</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-primary">Solicitar um Filme ou Série</h2>
             <p className="text-muted-foreground">Não encontrou o que procurava? Verifique aqui e faça seu pedido.</p>
           </div>
           <div className="flex w-full max-w-2xl mx-auto items-center space-x-2">
@@ -163,12 +172,9 @@ export default function Home() {
                 placeholder="Digite o nome do filme ou série..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10 text-lg py-6 rounded-full shadow-inner"
+                className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
               />
             </div>
-            <Button size="lg" className="rounded-full" onClick={() => handleSearch(searchQuery)} disabled={isLoading}>
-              {isLoading ? 'Buscando...' : 'Buscar'}
-            </Button>
           </div>
 
           <div className="pt-8">
@@ -177,32 +183,36 @@ export default function Home() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             )}
-
-            {searchPerformed && !isLoading && (
+            
+            {!isLoading && searchPerformed && (
               <>
                 {results.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {results.map((item, index) => (
-                       <div key={`result-${index}`} className="flex flex-col gap-2 items-center">
-                         <ContentCard item={item} />
-                         {item.status === 'requestable' ? (
-                            <Button 
-                               className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
-                               onClick={() => handleRequest(item)}
-                            >
-                               Solicitar
-                            </Button>
-                         ) : (
-                            <Button variant="secondary" disabled className="w-full cursor-default">
-                               Já está no sistema
-                            </Button>
-                         )}
-                       </div>
+                       item.status === 'loading' ? (
+                          <ContentCardSkeleton key={`skeleton-${index}`} />
+                       ) : (
+                         <div key={`result-${index}`} className="flex flex-col gap-2 items-center">
+                           <ContentCard item={item} />
+                           {item.status === 'requestable' ? (
+                              <Button 
+                                 className="w-full bg-accent text-accent-foreground hover:bg-accent/90" 
+                                 onClick={() => handleRequest(item)}
+                              >
+                                 Solicitar
+                              </Button>
+                           ) : (
+                              <Button variant="secondary" disabled className="w-full cursor-default">
+                                 Já está no sistema
+                              </Button>
+                           )}
+                         </div>
+                       )
                     ))}
                   </div>
                 ) : (
                    searchQuery.length > 2 && (
-                    <Card className="text-center py-10 px-6 border-dashed">
+                    <Card className="text-center py-10 px-6 border-dashed bg-card">
                       <CardContent>
                         <h3 className="text-xl font-semibold text-card-foreground mb-2">
                           Nenhum resultado encontrado
