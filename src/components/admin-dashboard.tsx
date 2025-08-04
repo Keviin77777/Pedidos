@@ -110,7 +110,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center gap-4">
                                <div className="w-24 h-14 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
                                   <Image
-                                      src={req.logo || 'https://placehold.co/150x100.png'}
+                                      src={req.logo || 'https://placehold.co/100x150.png'}
                                       alt={`Capa de ${req.title}`}
                                       fill
                                       className="object-cover"
