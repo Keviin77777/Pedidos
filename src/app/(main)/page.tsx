@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
-import { saveContentRequest, getContentRequests } from '@/lib/admin';
+import { saveContentRequest, getContentRequests, onRequestsUpdated } from '@/lib/admin';
 import type { ContentRequest } from '@/lib/admin';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -39,44 +39,40 @@ export default function Home() {
   const { m3uItems: m3uItemsCache, isLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
 
-  const loadAndSetRequests = useCallback(() => {
-    const allRequests = getContentRequests();
-    setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
-    const requested = new Set(allRequests.map(r => r.title));
-    setRequestedItems(requested);
-  }, []);
-  
   useEffect(() => {
-    loadAndSetRequests();
-  
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'cineassist_content_requests') {
-        loadAndSetRequests();
-      }
-    };
-  
-    window.addEventListener('storage', handleStorageChange);
-  
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [loadAndSetRequests]);
+    const unsubscribe = onRequestsUpdated((allRequests) => {
+        setAddedItems(allRequests.filter(req => req.status === 'Adicionado'));
+        const requested = new Set(allRequests.filter(r => r.status === 'Pendente').map(r => r.title));
+        setRequestedItems(requested);
+    });
 
-  const handleRequest = (item: M3UItem) => {
-    saveContentRequest({
-      title: item.name,
-      type: item.category,
-      logo: item.logo,
-    });
-    toast({
-      title: 'Pedido Enviado!',
-      description: `Recebemos seu pedido para "${item.name}".`,
-    });
-    // Optimistically update the state
-    setRequestedItems(prev => new Set(prev).add(item.name));
-    setResults(prev => 
-      prev.map(r => r.name === item.name ? {...r, status: 'requested'} : r)
-    );
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const handleRequest = async (item: M3UItem) => {
+    try {
+      await saveContentRequest({
+        title: item.name,
+        type: item.category,
+        logo: item.logo,
+      });
+      toast({
+        title: 'Pedido Enviado!',
+        description: `Recebemos seu pedido para "${item.name}".`,
+      });
+      // Optimistically update the state
+      setRequestedItems(prev => new Set(prev).add(item.name));
+      setResults(prev => 
+        prev.map(r => r.name === item.name ? {...r, status: 'requested'} : r)
+      );
+    } catch (error) {
+       toast({
+        title: 'Erro ao Enviar',
+        description: 'Não foi possível enviar seu pedido. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const normalizeTitle = (title: string | null | undefined): string => {

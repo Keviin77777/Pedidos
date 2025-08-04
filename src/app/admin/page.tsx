@@ -8,21 +8,31 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminLoginPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     // Simple hardcoded credentials for now
     if (username === 'admin' && password === 'admin') {
-      setIsAuthenticated(true);
-      setError('');
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        setIsLoading(false);
+      }, 500);
     } else {
-      setError('Credenciais inválidas. Tente novamente.');
+      toast({
+        title: 'Erro de Autenticação',
+        description: 'Credenciais inválidas. Tente novamente.',
+        variant: 'destructive'
+      })
+      setIsLoading(false);
     }
   };
 
@@ -53,6 +63,7 @@ export default function AdminLoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -64,15 +75,15 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
-            {error && (
-              <p className="text-sm text-center font-medium text-destructive">
-                {error}
-              </p>
-            )}
-            <Button type="submit" className="w-full">
-              Entrar
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground"></div>
+              ) : (
+                'Entrar'
+              )}
             </Button>
           </form>
         </CardContent>

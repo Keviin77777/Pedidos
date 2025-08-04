@@ -1,6 +1,20 @@
 
 'use client';
 
+import { db } from './firebase';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  Timestamp,
+  query,
+  orderBy,
+  onSnapshot,
+  getDocs,
+} from 'firebase/firestore';
+
 // ======== TYPES ========
 
 export interface ContentRequest {
@@ -9,7 +23,7 @@ export interface ContentRequest {
   type: string;
   logo?: string | null;
   notes?: string;
-  requestedAt: string;
+  requestedAt: string; // Storing as ISO string for simplicity
   status: 'Pendente' | 'Adicionado';
 }
 
@@ -17,98 +31,121 @@ export interface ProblemReport {
   id: string;
   title: string;
   problem: string;
-  reportedAt: string;
+  reportedAt: string; // Storing as ISO string
   status: 'Aberto' | 'Resolvido';
 }
 
-// ======== LOCAL STORAGE HELPERS ========
+type FirebaseContentRequest = Omit<ContentRequest, 'id' | 'requestedAt'> & { requestedAt: Timestamp };
+type FirebaseProblemReport = Omit<ProblemReport, 'id' | 'reportedAt'> & { reportedAt: Timestamp };
 
-const getFromStorage = <T>(key: string): T[] => {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-  try {
-    const item = window.localStorage.getItem(key);
-    return item ? JSON.parse(item) : [];
-  } catch (error) {
-    console.error(`Error reading from localStorage key “${key}”:`, error);
-    return [];
-  }
+// ======== COLLECTIONS ========
+const requestsCollection = collection(db, 'content-requests');
+const reportsCollection = collection(db, 'problem-reports');
+
+// ======== REALTIME LISTENERS ========
+
+const createOnSnapshotListener = <T>(
+  col: collection,
+  setData: (data: T[]) => void,
+  onError: (error: Error) => void
+) => {
+  const q = query(col, orderBy('requestedAt', 'desc'));
+  
+  return onSnapshot(q, (querySnapshot) => {
+    const items: T[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const id = doc.id;
+      // Convert Firestore Timestamp to ISO string
+      const requestedAt = (data.requestedAt as Timestamp).toDate().toISOString();
+      items.push({ ...data, id, requestedAt } as T);
+    });
+    setData(items);
+  }, (error) => {
+    console.error("Error listening to collection:", error);
+    onError(error);
+  });
 };
 
-const saveToStorage = <T>(key: string, data: T[]): void => {
-   if (typeof window === 'undefined') {
-    return;
-  }
-  try {
-    window.localStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.error(`Error writing to localStorage key “${key}”:`, error);
-  }
+export const onRequestsUpdated = (
+  callback: (requests: ContentRequest[]) => void,
+  onError: (error: Error) => void
+) => {
+  return createOnSnapshotListener<ContentRequest>(requestsCollection, callback, onError);
+};
+
+export const onProblemReportsUpdated = (
+  callback: (reports: ProblemReport[]) => void,
+  onError: (error: Error) => void
+) => {
+  return createOnSnapshotListener<ProblemReport>(reportsCollection, callback, onError);
 };
 
 
 // ======== CONTENT REQUESTS ========
 
-const REQUESTS_KEY = 'cineassist_content_requests';
-
-export const getContentRequests = (): ContentRequest[] => {
-  return getFromStorage<ContentRequest>(REQUESTS_KEY);
+export const getContentRequests = async (): Promise<ContentRequest[]> => {
+  const q = query(requestsCollection, orderBy('requestedAt', 'desc'));
+  const snapshot = await getDocs(q);
+  const requests: ContentRequest[] = [];
+  snapshot.forEach(doc => {
+      const data = doc.data() as FirebaseContentRequest;
+      requests.push({
+          id: doc.id,
+          ...data,
+          requestedAt: data.requestedAt.toDate().toISOString(),
+      });
+  });
+  return requests;
 };
 
-export const saveContentRequest = (request: Omit<ContentRequest, 'id' | 'requestedAt' | 'status'>): void => {
-  const requests = getContentRequests();
-  const newRequest: ContentRequest = {
+export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'requestedAt' | 'status'>): Promise<void> => {
+  const newRequest: FirebaseContentRequest = {
     ...request,
-    id: `REQ${Date.now()}`,
-    requestedAt: new Date().toISOString(),
+    requestedAt: Timestamp.now(),
     status: 'Pendente',
   };
-  requests.unshift(newRequest); // Add to the beginning
-  saveToStorage(REQUESTS_KEY, requests);
+  await addDoc(requestsCollection, newRequest);
 };
 
-export const updateContentRequestStatus = (id: string, status: ContentRequest['status']): void => {
-    const requests = getContentRequests();
-    const index = requests.findIndex(req => req.id === id);
-    if (index !== -1) {
-        requests[index].status = status;
-        saveToStorage(REQUESTS_KEY, requests);
-    }
+export const updateContentRequestStatus = async (id: string, status: ContentRequest['status']): Promise<void> => {
+    const requestDoc = doc(db, 'content-requests', id);
+    await updateDoc(requestDoc, { status });
 }
 
-export const deleteContentRequest = (id: string): void => {
-    let requests = getContentRequests();
-    requests = requests.filter(req => req.id !== id);
-    saveToStorage(REQUESTS_KEY, requests);
+export const deleteContentRequest = async (id: string): Promise<void> => {
+    const requestDoc = doc(db, 'content-requests', id);
+    await deleteDoc(requestDoc);
 };
 
 
 // ======== PROBLEM REPORTS ========
 
-const REPORTS_KEY = 'cineassist_problem_reports';
-
-export const getProblemReports = (): ProblemReport[] => {
-  return getFromStorage<ProblemReport>(REPORTS_KEY);
+export const getProblemReports = async (): Promise<ProblemReport[]> => {
+  const q = query(reportsCollection, orderBy('reportedAt', 'desc'));
+  const snapshot = await getDocs(q);
+  const reports: ProblemReport[] = [];
+  snapshot.forEach(doc => {
+      const data = doc.data() as FirebaseProblemReport;
+      reports.push({
+          id: doc.id,
+          ...data,
+          reportedAt: data.reportedAt.toDate().toISOString(),
+      });
+  });
+  return reports;
 };
 
-export const saveProblemReport = (report: Omit<ProblemReport, 'id' | 'reportedAt' | 'status'>): void => {
-  const reports = getProblemReports();
-  const newReport: ProblemReport = {
+export const saveProblemReport = async (report: Omit<ProblemReport, 'id' | 'reportedAt' | 'status'>): Promise<void> => {
+  const newReport: FirebaseProblemReport = {
     ...report,
-    id: `REP${Date.now()}`,
-    reportedAt: new Date().toISOString(),
+    reportedAt: Timestamp.now(),
     status: 'Aberto',
   };
-  reports.unshift(newReport); // Add to the beginning
-  saveToStorage(REPORTS_KEY, reports);
+  await addDoc(reportsCollection, newReport);
 };
 
-export const updateProblemReportStatus = (id: string, status: ProblemReport['status']): void => {
-    const reports = getProblemReports();
-    const index = reports.findIndex(rep => rep.id === id);
-    if (index !== -1) {
-        reports[index].status = status;
-        saveToStorage(REPORTS_KEY, reports);
-    }
+export const updateProblemReportStatus = async (id: string, status: ProblemReport['status']): Promise<void> => {
+    const reportDoc = doc(db, 'problem-reports', id);
+    await updateDoc(reportDoc, { status });
 }

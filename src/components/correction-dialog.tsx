@@ -28,8 +28,9 @@ export function CorrectionDialog({ item }: CorrectionDialogProps) {
   const { toast } = useToast();
   const [issue, setIssue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (issue.trim().length < 10) {
       toast({
@@ -40,17 +41,28 @@ export function CorrectionDialog({ item }: CorrectionDialogProps) {
       return;
     }
     
-    saveProblemReport({
-        title: item.name,
-        problem: issue,
-    });
+    setIsSubmitting(true);
+    try {
+      await saveProblemReport({
+          title: item.name,
+          problem: issue,
+      });
 
-    toast({
-      title: 'Relatório de Correção Enviado!',
-      description: `Recebemos seu relatório para "${item.name}". Obrigado por ajudar!`,
-    });
-    setIsOpen(false);
-    setIssue('');
+      toast({
+        title: 'Relatório de Correção Enviado!',
+        description: `Recebemos seu relatório para "${item.name}". Obrigado por ajudar!`,
+      });
+      setIsOpen(false);
+      setIssue('');
+    } catch (error) {
+       toast({
+        title: 'Erro ao Enviar Relatório',
+        description: 'Não foi possível enviar seu relatório. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,16 +92,19 @@ export function CorrectionDialog({ item }: CorrectionDialogProps) {
                 onChange={(e) => setIssue(e.target.value)}
                 className="col-span-3 min-h-[120px]"
                 placeholder="Ex: Áudio dessincronizado, imagem de baixa qualidade, episódio errado, etc."
+                disabled={isSubmitting}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button type="button" variant="secondary" disabled={isSubmitting}>
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Enviar Relatório</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Enviando...' : 'Enviar Relatório'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

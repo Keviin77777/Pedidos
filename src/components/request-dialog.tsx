@@ -25,8 +25,9 @@ export function ManualRequestDialog() {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (title.trim().length < 2) {
       toast({
@@ -37,19 +38,30 @@ export function ManualRequestDialog() {
       return;
     }
     
-    saveContentRequest({
-      title,
-      notes,
-      type: 'Pedido Manual',
-    });
+    setIsSubmitting(true);
+    try {
+      await saveContentRequest({
+        title,
+        notes,
+        type: 'Pedido Manual',
+      });
 
-    toast({
-      title: 'Pedido Manual Enviado!',
-      description: `Recebemos seu pedido para "${title}".`,
-    });
-    setIsOpen(false);
-    setTitle('');
-    setNotes('');
+      toast({
+        title: 'Pedido Manual Enviado!',
+        description: `Recebemos seu pedido para "${title}".`,
+      });
+      setIsOpen(false);
+      setTitle('');
+      setNotes('');
+    } catch(error) {
+       toast({
+        title: 'Erro ao Enviar Pedido',
+        description: 'Não foi possível enviar seu pedido. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -79,6 +91,7 @@ export function ManualRequestDialog() {
                 onChange={(e) => setTitle(e.target.value)}
                 className="col-span-3"
                 placeholder="Ex: O Poderoso Chefão (1972)"
+                disabled={isSubmitting}
               />
             </div>
             <div className="grid grid-cols-4 items-start gap-4">
@@ -91,16 +104,19 @@ export function ManualRequestDialog() {
                 onChange={(e) => setNotes(e.target.value)}
                 className="col-span-3"
                 placeholder="Alguma informação adicional? Ex: Versão do diretor, dublagem específica, etc."
+                disabled={isSubmitting}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button type="button" variant="secondary" disabled={isSubmitting}>
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Enviar Pedido</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Enviando...' : 'Enviar Pedido'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
