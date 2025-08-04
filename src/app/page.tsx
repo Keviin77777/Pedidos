@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { M3UItem } from '@/lib/types';
 import Header from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -79,24 +79,21 @@ export default function Home() {
   };
 
 
-  const handleSearch = async () => {
-    if (searchQuery.trim() === '') {
-      toast({
-        title: 'Busca inválida',
-        description: 'Por favor, digite um título para buscar.',
-        variant: 'destructive',
-      });
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 3) {
+      setResults([]);
+      setSearchPerformed(false);
       return;
     }
 
     setIsLoading(true);
     setSearchPerformed(false);
-    setResults([]);
-
+    
     try {
-      const tmdbResults = await searchTmdb(searchQuery);
+      const tmdbResults = await searchTmdb(query);
 
       if (tmdbResults.length === 0) {
+        setResults([]);
         setSearchPerformed(true);
         setIsLoading(false);
         return;
@@ -110,10 +107,14 @@ export default function Home() {
       }
 
       const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
-
+      
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
-        const isExisting = normalizedM3uTitles.has(normalizedTmdbTitle);
+        
+        // A more robust check: see if any m3u title is very similar to the tmdb title
+        const isExisting = Array.from(normalizedM3uTitles).some(m3uTitle => 
+            m3uTitle.includes(normalizedTmdbTitle) || normalizedTmdbTitle.includes(m3uTitle)
+        );
         
         return {
           ...tmdbItem,
@@ -134,7 +135,16 @@ export default function Home() {
       setIsLoading(false);
       setSearchPerformed(true);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      handleSearch(searchQuery);
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchQuery, handleSearch])
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -153,11 +163,10 @@ export default function Home() {
                 placeholder="Digite o nome do filme ou série..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner"
               />
             </div>
-            <Button size="lg" className="rounded-full" onClick={handleSearch} disabled={isLoading}>
+            <Button size="lg" className="rounded-full" onClick={() => handleSearch(searchQuery)} disabled={isLoading}>
               {isLoading ? 'Buscando...' : 'Buscar'}
             </Button>
           </div>
@@ -192,16 +201,18 @@ export default function Home() {
                     ))}
                   </div>
                 ) : (
-                   <Card className="text-center py-10 px-6 border-dashed">
-                    <CardContent>
-                      <h3 className="text-xl font-semibold text-card-foreground mb-2">
-                        Nenhum resultado encontrado
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Não encontramos nenhum conteúdo para "{searchQuery}". Verifique o título e tente novamente.
-                      </p>
-                    </CardContent>
-                  </Card>
+                   searchQuery.length > 2 && (
+                    <Card className="text-center py-10 px-6 border-dashed">
+                      <CardContent>
+                        <h3 className="text-xl font-semibold text-card-foreground mb-2">
+                          Nenhum resultado encontrado
+                        </h3>
+                        <p className="text-muted-foreground">
+                          Não encontramos nenhum conteúdo para "{searchQuery}". Verifique o título e tente novamente.
+                        </p>
+                      </CardContent>
+                    </Card>
+                   )
                 )}
               </>
             )}
