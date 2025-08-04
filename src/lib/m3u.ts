@@ -55,11 +55,11 @@ export async function getM3UItems(): Promise<M3UItem[]> {
             continue;
           }
 
-          if (parsedInfo.name && parsedInfo.logo && parsedInfo.category) {
+          if (parsedInfo.name) {
             items.push({
               name: parsedInfo.name,
-              logo: parsedInfo.logo,
-              category: parsedInfo.category,
+              logo: parsedInfo.logo || null,
+              category: parsedInfo.category || 'Desconhecida',
               url: url.trim(),
             });
           }
@@ -69,7 +69,8 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     }
     return items;
   } catch (error) {
-    console.error('Error parsing M3U playlist:', error);
+    console.error('Error fetching or parsing M3U playlist:', error);
+    // Return empty array to allow TMDB fallback
     return [];
   }
 }
