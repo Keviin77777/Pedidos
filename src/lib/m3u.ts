@@ -31,7 +31,7 @@ const parseExtInfLine = (line: string): Partial<M3UItem> => {
 export async function getM3UItems(): Promise<M3UItem[]> {
   try {
     const response = await fetch(M3U_URL, {
-      next: { revalidate: 600 }, // Revalidate every 10 minutes
+      cache: 'no-store', // Replaced revalidate with no-store to avoid cache size error
     });
 
     if (!response.ok) {
