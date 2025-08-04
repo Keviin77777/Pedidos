@@ -3,11 +3,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wrench, Ticket } from 'lucide-react';
+import { Home, Wrench, Ticket, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
+  { href: '/pedidos-adicionados', label: 'Pedidos Adicionados', icon: Sparkles },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
 ];
 
