@@ -60,13 +60,8 @@ export default function Home() {
     setResults([]);
 
     try {
-      // 1. Fetch all items from M3U and TMDB concurrently
-      const [m3uItems, tmdbResults] = await Promise.all([
-        getM3UItems(),
-        searchTmdb(searchQuery)
-      ]);
-
-      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
+      // 1. Fetch from TMDB first
+      const tmdbResults = await searchTmdb(searchQuery);
 
       if (tmdbResults.length === 0) {
         setSearchPerformed(true);
@@ -74,7 +69,18 @@ export default function Home() {
         return;
       }
       
-      // 2. Process results: check if TMDB results exist in M3U
+      // 2. Fetch M3U items, but don't let it crash the app
+      let m3uItems: M3UItem[] = [];
+      try {
+        m3uItems = await getM3UItems();
+      } catch (e) {
+        console.error("Could not fetch M3U list, continuing without it.", e);
+        // m3uItems will be an empty array, so all TMDB results will be 'requestable'
+      }
+
+      const normalizedM3uTitles = new Set(m3uItems.map(item => normalizeTitle(item.name)));
+
+      // 3. Process results: check if TMDB results exist in M3U
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         const normalizedTmdbTitle = normalizeTitle(tmdbItem.name);
         
@@ -95,7 +101,7 @@ export default function Home() {
       console.error("Error during search:", error);
       toast({
         title: 'Erro na Busca',
-        description: 'Ocorreu um erro ao buscar. Tente novamente mais tarde.',
+        description: 'Ocorreu um erro ao buscar no TMDB. Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
@@ -215,5 +221,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
