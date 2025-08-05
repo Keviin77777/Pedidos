@@ -41,18 +41,18 @@ export default function CorrectionPage() {
     try {
         const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
         
-        const searchTypes = ['movie', 'tv'];
+        // Adjust search type based on item, but default to both if 'all' is selected
+        const searchTypes = item.type === 'movie' ? ['movie'] : item.type === 'series' ? ['tv'] : ['movie', 'tv'];
+
         const requests = searchTypes.map(type => 
             fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(cleanedTitle)}&language=pt-BR`)
                 .then(res => res.ok ? res.json() : Promise.resolve({ results: [] }))
         );
 
-        const [movieResults, tvResults] = await Promise.all(requests);
-
-        const allResults = [
-            ...(movieResults.results || []).map((r: any) => ({ ...r, searchType: 'movie' })),
-            ...(tvResults.results || []).map((r: any) => ({ ...r, searchType: 'tv' }))
-        ];
+        const results = await Promise.all(requests);
+        const allResults = results.flatMap((result, index) => 
+            (result.results || []).map((r: any) => ({ ...r, searchType: searchTypes[index] }))
+        );
 
         const normalizedCleanedTitle = normalizeTitle(cleanedTitle);
         const bestResult = allResults.sort((a, b) => {
@@ -60,7 +60,18 @@ export default function CorrectionPage() {
             const titleB = normalizeTitle(b.title || b.name || '');
             const scoreA = titleA === normalizedCleanedTitle ? 3 : titleA.startsWith(normalizedCleanedTitle) ? 2 : titleA.includes(normalizedCleanedTitle) ? 1 : 0;
             const scoreB = titleB === normalizedCleanedTitle ? 3 : titleB.startsWith(normalizedCleanedTitle) ? 2 : titleB.includes(normalizedCleanedTitle) ? 1 : 0;
-            return scoreB - scoreA;
+            
+            if (scoreB !== scoreA) {
+              return scoreB - scoreA;
+            }
+            // Give preference to exact match on type if scores are equal
+            if(item.type === 'series' && b.searchType === 'tv') return 1;
+            if(item.type === 'series' && a.searchType === 'tv') return -1;
+            if(item.type === 'movie' && b.searchType === 'movie') return 1;
+            if(item.type === 'movie' && a.searchType === 'movie') return -1;
+
+            return (b.popularity || 0) - (a.popularity || 0);
+
         })[0];
         
         if (bestResult) {
@@ -91,6 +102,8 @@ export default function CorrectionPage() {
 
     const sourceList = m3uItemsCache.filter(item => {
         if (type === 'all') return true;
+        // The type in m3uItem is 'movie' or 'series'
+        // The type from the tab is 'movie' or 'series'
         return item.type === type;
     });
 
@@ -104,6 +117,7 @@ export default function CorrectionPage() {
 
     enriched.forEach(async (item) => {
         try {
+            // Pass the specific item to the search function
             const details = await searchTmdbForDetails(item);
             setFilteredItems(prev => {
                 const newItems = [...prev];
