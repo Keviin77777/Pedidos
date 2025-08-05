@@ -39,10 +39,13 @@ export default function CorrectionPage() {
   
   const searchTmdbForDetails = async (item: M3UItem): Promise<M3UItem> => {
     try {
-        const cleanedTitle = item.name.replace(/\s*\(\d{4}\)\s*$/, '').trim();
+        const cleanedTitle = item.name
+          .replace(/\s*\[.*?\]\s*/g, '') // Remove content in brackets like [L]
+          .replace(/\s*\(\d{4}\)\s*$/, '')
+          .trim();
         
         // Adjust search type based on item, but default to both if 'all' is selected
-        const searchTypes = item.type === 'movie' ? ['movie'] : item.type === 'series' ? ['tv'] : ['movie', 'tv'];
+        const searchTypes = searchType === 'movie' ? ['movie'] : searchType === 'series' ? ['tv'] : ['movie', 'tv'];
 
         const requests = searchTypes.map(type => 
             fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(cleanedTitle)}&language=pt-BR`)
