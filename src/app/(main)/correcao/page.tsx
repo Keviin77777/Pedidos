@@ -24,7 +24,7 @@ export default function CorrectionPage() {
   const [searchType, setSearchType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
-  const { m3uItems: m3uItemsCache, isLoading: isCacheLoading } = useContext(M3uContext);
+  const { m3uItems: m3uItemsCache, isInitialLoading: isCacheLoading } = useContext(M3uContext);
 
 
   const normalizeTitle = (title: string): string => {

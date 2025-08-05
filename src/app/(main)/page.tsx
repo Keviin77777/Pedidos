@@ -35,7 +35,7 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
 
-  const { m3uItems: m3uItemsCache, isLoading: isM3uLoading } = useContext(M3uContext);
+  const { m3uItems: m3uItemsCache, isInitialLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
 
   useEffect(() => {

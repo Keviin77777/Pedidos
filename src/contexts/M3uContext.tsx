@@ -1,34 +1,35 @@
 
 'use client';
 
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import type { M3UItem } from '@/lib/types';
 import { getM3UItems } from '@/lib/m3u';
 
 interface M3uContextType {
   m3uItems: M3UItem[];
-  isLoading: boolean;
+  isInitialLoading: boolean; // Renamed to reflect its purpose
 }
 
 export const M3uContext = createContext<M3uContextType>({
   m3uItems: [],
-  isLoading: true,
+  isInitialLoading: true,
 });
 
 // State to hold items globally, outside of the component lifecycle
 let cachedItems: M3UItem[] | null = null;
+let hasLoadedInitially = false;
 
 export const M3uProvider = ({ children }: { children: ReactNode }) => {
   const [m3uItems, setM3uItems] = useState<M3UItem[]>(cachedItems || []);
-  const [isLoading, setIsLoading] = useState(!cachedItems);
+  const [isInitialLoading, setIsInitialLoading] = useState(!hasLoadedInitially);
 
   useEffect(() => {
     const loadItems = async () => {
-      // Only load if the cache is empty
-      if (cachedItems) {
+      // Only load if the cache is empty and it hasn't loaded before.
+      if (hasLoadedInitially) {
         return;
       }
-      setIsLoading(true);
+      
       try {
         const items = await getM3UItems();
         cachedItems = items; // Store items in the global cache
@@ -38,7 +39,8 @@ export const M3uProvider = ({ children }: { children: ReactNode }) => {
         cachedItems = []; // Ensure cache is an array on error
         setM3uItems([]); 
       } finally {
-        setIsLoading(false);
+        setIsInitialLoading(false);
+        hasLoadedInitially = true; // Mark that initial load has completed
       }
     };
     
@@ -46,7 +48,7 @@ export const M3uProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <M3uContext.Provider value={{ m3uItems, isLoading }}>
+    <M3uContext.Provider value={{ m3uItems, isInitialLoading }}>
       {children}
     </M3uContext.Provider>
   );
