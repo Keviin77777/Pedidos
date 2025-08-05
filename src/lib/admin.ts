@@ -33,6 +33,7 @@ export interface ProblemReport {
   id: string;
   title: string;
   problem: string;
+  logo?: string | null;
   reportedAt: string; // Storing as ISO string
   status: 'Aberto' | 'Resolvido';
 }
@@ -118,7 +119,7 @@ export const deleteContentRequest = async (id: string): Promise<void> => {
 // ======== PROBLEM REPORTS ========
 
 export const saveProblemReport = async (report: Omit<ProblemReport, 'id' | 'reportedAt' | 'status'>): Promise<void> => {
-  const newReport: FirebaseProblemReport = {
+  const newReport: Omit<FirebaseProblemReport, 'id'> = {
     ...report,
     reportedAt: Timestamp.now(),
     status: 'Aberto',

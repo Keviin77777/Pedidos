@@ -277,7 +277,21 @@ export default function AdminDashboard() {
                   </>,
                   (report: ProblemReport) => (
                     <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.title}</TableCell>
+                      <TableCell>
+                          <div className="flex items-center gap-4">
+                              <div className="w-16 h-24 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                                <Image
+                                    src={report.logo || 'https://placehold.co/400x600.png'}
+                                    alt={`Capa de ${report.title}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="64px"
+                                    data-ai-hint="movie poster"
+                                />
+                              </div>
+                              <div className="font-medium">{report.title}</div>
+                          </div>
+                      </TableCell>
                       <TableCell>{report.problem}</TableCell>
                       <TableCell className="hidden md:table-cell">
                           {new Date(report.reportedAt).toLocaleDateString("pt-BR", {

@@ -46,6 +46,7 @@ export function CorrectionDialog({ item }: CorrectionDialogProps) {
       await saveProblemReport({
           title: item.name,
           problem: issue,
+          logo: item.logo,
       });
 
       toast({
