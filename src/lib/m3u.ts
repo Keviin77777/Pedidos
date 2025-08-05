@@ -48,7 +48,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
         vodCategoriesResponse, 
         seriesCategoriesResponse
     ] = await Promise.all([
-      fetch(endpoints.vod, { cache: 'no-store' }), // Cache for 10 minutes
+      fetch(endpoints.vod, { cache: 'no-store' }),
       fetch(endpoints.series, { cache: 'no-store' }),
       fetch(endpoints.vodCategories, { cache: 'no-store' }),
       fetch(endpoints.seriesCategories, { cache: 'no-store' })
@@ -60,12 +60,17 @@ export async function getM3UItems(): Promise<M3UItem[]> {
             console.error(`Failed to fetch ${name} from XUI One API:`, response.statusText);
             return [];
         }
-        const data = await response.json();
-        if (!Array.isArray(data)) {
-            console.error(`${name} API did not return an array.`);
-            return [];
+        try {
+          const data = await response.json();
+          if (!Array.isArray(data)) {
+              console.error(`${name} API did not return an array.`);
+              return [];
+          }
+          return data;
+        } catch (error) {
+           console.error(`Error parsing JSON for ${name}:`, error);
+           return [];
         }
-        return data;
     };
 
     const vodData: XuiOneContent[] = await processResponse(vodResponse, 'VOD streams');
@@ -89,6 +94,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
         category: categoryName || 'Filme',
         url: '', // Not needed for checking existence
         synopsis: '', // To be fetched from TMDB
+        type: 'movie',
       };
     });
 
@@ -101,6 +107,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
         category: categoryName || 'Série',
         url: '',
         synopsis: '',
+        type: 'series',
       };
     });
     

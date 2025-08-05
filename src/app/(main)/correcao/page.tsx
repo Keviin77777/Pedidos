@@ -91,9 +91,7 @@ export default function CorrectionPage() {
 
     const sourceList = m3uItemsCache.filter(item => {
         if (type === 'all') return true;
-        // This is a simple heuristic. A more robust way would be to have a definitive type from the API.
-        const itemType = (item.category || '').toLowerCase().includes('série') ? 'series' : 'movie';
-        return type === itemType;
+        return item.type === type;
     });
 
     const filtered = sourceList.filter(item => 

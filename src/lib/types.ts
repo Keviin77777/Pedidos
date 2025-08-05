@@ -4,4 +4,5 @@ export interface M3UItem {
   category: string;
   url: string;
   synopsis?: string;
+  type?: 'movie' | 'series';
 }
