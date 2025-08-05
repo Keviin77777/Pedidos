@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { CorrectionDialog } from '@/components/correction-dialog';
 import { M3uContext } from '@/contexts/M3uContext';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -20,12 +21,14 @@ interface EnrichedM3UItem extends M3UItem {
 
 export default function CorrectionPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
   const { m3uItems: m3uItemsCache, isLoading: isCacheLoading } = useContext(M3uContext);
 
 
   const normalizeTitle = (title: string): string => {
+    if (!title) return '';
     return title
       .toLowerCase()
       .normalize('NFD')
@@ -51,12 +54,10 @@ export default function CorrectionPage() {
             ...(tvResults.results || []).map((r: any) => ({ ...r, searchType: 'tv' }))
         ];
 
-        // Basic similarity check (can be improved)
         const normalizedCleanedTitle = normalizeTitle(cleanedTitle);
         const bestResult = allResults.sort((a, b) => {
             const titleA = normalizeTitle(a.title || a.name || '');
             const titleB = normalizeTitle(b.title || b.name || '');
-            // A simple way to score similarity: exact match is best, then starts with, then includes.
             const scoreA = titleA === normalizedCleanedTitle ? 3 : titleA.startsWith(normalizedCleanedTitle) ? 2 : titleA.includes(normalizedCleanedTitle) ? 1 : 0;
             const scoreB = titleB === normalizedCleanedTitle ? 3 : titleB.startsWith(normalizedCleanedTitle) ? 2 : titleB.includes(normalizedCleanedTitle) ? 1 : 0;
             return scoreB - scoreA;
@@ -67,12 +68,11 @@ export default function CorrectionPage() {
                 ...item,
                 synopsis: bestResult.overview || 'Nenhuma sinopse disponível.',
                 logo: bestResult.poster_path ? `${TMDB_IMAGE_BASE_URL}${bestResult.poster_path}` : item.logo,
-                // We can even update the category if we want, for consistency
                 category: bestResult.searchType === 'tv' ? 'Série' : 'Filme',
             };
         }
 
-        return item; // Return original if no result found
+        return item;
     } catch (error) {
         console.error('Error fetching from TMDB for details:', error);
         return item;
@@ -80,7 +80,7 @@ export default function CorrectionPage() {
   };
 
 
-  const performSearch = useCallback(async (query: string) => {
+  const performSearch = useCallback(async (query: string, type: string) => {
     if (isCacheLoading || query.trim().length < 3) {
       setFilteredItems([]);
       return;
@@ -89,7 +89,14 @@ export default function CorrectionPage() {
     setIsLoading(true);
     const normalizedQuery = normalizeTitle(query);
 
-    const filtered = m3uItemsCache.filter(item => 
+    const sourceList = m3uItemsCache.filter(item => {
+        if (type === 'all') return true;
+        // This is a simple heuristic. A more robust way would be to have a definitive type from the API.
+        const itemType = (item.category || '').toLowerCase().includes('série') ? 'series' : 'movie';
+        return type === itemType;
+    });
+
+    const filtered = sourceList.filter(item => 
       normalizeTitle(item.name).includes(normalizedQuery)
     );
 
@@ -128,11 +135,11 @@ export default function CorrectionPage() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      performSearch(searchQuery);
+      performSearch(searchQuery, searchType);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, performSearch]);
+  }, [searchQuery, searchType, performSearch]);
 
 
   return (
@@ -143,12 +150,19 @@ export default function CorrectionPage() {
             <h2 className="text-2xl lg:text-3xl font-bold tracking-tight text-primary">Corrigir um Conteúdo</h2>
             <p className="text-muted-foreground">Encontrou um problema? Busque o conteúdo e nos informe.</p>
           </div>
-          <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-2">
+          <div className="flex flex-col w-full max-w-2xl mx-auto items-center space-y-4">
+            <Tabs value={searchType} onValueChange={setSearchType}>
+                <TabsList>
+                    <TabsTrigger value="all">Todos</TabsTrigger>
+                    <TabsTrigger value="movie">Filmes</TabsTrigger>
+                    <TabsTrigger value="series">Séries</TabsTrigger>
+                </TabsList>
+             </Tabs>
             <div className="relative w-full flex-grow">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Digite o nome do filme ou série com problema..."
+                placeholder={`Digite o nome d${searchType === 'series' ? 'a série' : 'o filme'} para corrigir...`}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
