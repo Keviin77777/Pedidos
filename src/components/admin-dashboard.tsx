@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import {
   deleteContentRequest,
+  deleteProblemReport,
   onProblemReportsUpdated,
   onRequestsUpdated,
   updateContentRequestStatus,
@@ -99,7 +100,16 @@ export default function AdminDashboard() {
     } catch (e) {
       toast({ title: 'Erro ao Remover', description: 'Não foi possível remover o pedido.', variant: 'destructive' });
     }
-  }
+  };
+
+  const handleReportDelete = async (id: string) => {
+    try {
+      await deleteProblemReport(id);
+      toast({ title: 'Relatório Removido', description: 'O relatório foi removido com sucesso.' });
+    } catch (e) {
+      toast({ title: 'Erro ao Remover', description: 'Não foi possível remover o relatório.', variant: 'destructive' });
+    }
+  };
 
   const renderTableBody = (
     data: any[],
@@ -319,6 +329,29 @@ export default function AdminDashboard() {
                               <DropdownMenuItem onClick={() => handleReportStatusChange(report.id, 'Aberto')}>
                                 Marcar como Aberto
                               </DropdownMenuItem>
+                               <DropdownMenuSeparator />
+                               <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-destructive focus:bg-destructive/10 focus:text-destructive data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                    Remover Relatório
+                                  </div>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Essa ação não pode ser desfeita. Isso removerá permanentemente o relatório de problema para
+                                        "{report.title}".
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleReportDelete(report.id)}>
+                                        Confirmar
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </DropdownMenuContent>
                           </DropdownMenu>
                       </TableCell>

@@ -131,3 +131,8 @@ export const updateProblemReportStatus = async (id: string, status: ProblemRepor
     const reportDoc = doc(db, 'problem-reports', id);
     await updateDoc(reportDoc, { status });
 }
+
+export const deleteProblemReport = async (id: string): Promise<void> => {
+    const reportDoc = doc(db, 'problem-reports', id);
+    await deleteDoc(reportDoc);
+};
