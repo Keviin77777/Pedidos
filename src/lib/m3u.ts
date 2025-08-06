@@ -115,12 +115,14 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     const allItems = [...movieItems, ...seriesItems];
     
     // Debug: log para verificar se os dados estão sendo carregados
-    console.log('M3U Items carregados:', {
-      totalItems: allItems.length,
-      movies: movieItems.length,
-      series: seriesItems.length,
-      sampleItems: allItems.slice(0, 5).map(item => item.name)
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('M3U Items carregados:', {
+        totalItems: allItems.length,
+        movies: movieItems.length,
+        series: seriesItems.length,
+        sampleItems: allItems.slice(0, 5).map(item => item.name)
+      });
+    }
       
     return allItems;
 

@@ -94,6 +94,47 @@ function PedidosContent() {
     const tmdbLower = tmdbTitle.toLowerCase();
     const m3uLower = m3uTitle.toLowerCase();
     
+    // Mapeamento de números romanos para números arábicos
+    const romanToArabic = (str: string): string => {
+      const romanNumerals: { [key: string]: number } = {
+        'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5, 'vi': 6, 'vii': 7, 'viii': 8, 'ix': 9, 'x': 10
+      };
+      
+      // Procurar por números romanos no final do título
+      const words = str.split(' ');
+      const lastWord = words[words.length - 1];
+      
+      if (romanNumerals[lastWord]) {
+        words[words.length - 1] = romanNumerals[lastWord].toString();
+        return words.join(' ');
+      }
+      
+      return str;
+    };
+    
+    // Aplicar conversão de números romanos
+    const tmdbWithArabic = romanToArabic(tmdbLower);
+    const m3uWithArabic = romanToArabic(m3uLower);
+    
+    // Comparar após conversão de números romanos
+    if (tmdbWithArabic === m3uWithArabic) {
+      return true;
+    }
+    
+    // Verificar se um título tem número e o outro não
+    const tmdbHasNumber = /\d/.test(tmdbLower);
+    const m3uHasNumber = /\d/.test(m3uLower);
+    
+    if (tmdbHasNumber !== m3uHasNumber) {
+      // Se um tem número e o outro não, extrair o nome base
+      const tmdbBase = tmdbLower.replace(/\s+\d+.*$/, '');
+      const m3uBase = m3uLower.replace(/\s+\d+.*$/, '');
+      
+      if (tmdbBase === m3uBase) {
+        return true;
+      }
+    }
+    
     // Se um contém ":" e o outro não, são filmes diferentes
     if ((tmdbLower.includes(':') && !m3uLower.includes(':')) || 
         (!tmdbLower.includes(':') && m3uLower.includes(':'))) {
@@ -380,28 +421,34 @@ function PedidosContent() {
         
         // Debug: verificar se há itens no cache
         if (m3uItemsCache.length === 0) {
-          console.log('CACHE M3U VAZIO - nenhum item carregado');
+          if (process.env.NODE_ENV === 'development') {
+            console.log('CACHE M3U VAZIO - nenhum item carregado');
+          }
         }
         
         for (const m3uItem of m3uItemsCache) {
           if (isExactMatch(tmdbItem.name, m3uItem.name)) {
             existingItems.push(m3uItem);
-            console.log('MATCH ENCONTRADO:', {
-              tmdb: tmdbItem.name,
-              m3u: m3uItem.name,
-              normalizedTmdb: normalizeTitle(tmdbItem.name),
-              normalizedM3u: normalizeTitle(m3uItem.name),
-              category: m3uItem.category,
-              tmdbWords: normalizeTitle(tmdbItem.name).split(' ').filter(word => word.length > 2),
-              m3uWords: normalizeTitle(m3uItem.name).split(' ').filter(word => word.length > 2)
-            });
+            if (process.env.NODE_ENV === 'development') {
+              console.log('MATCH ENCONTRADO:', {
+                tmdb: tmdbItem.name,
+                m3u: m3uItem.name,
+                normalizedTmdb: normalizeTitle(tmdbItem.name),
+                normalizedM3u: normalizeTitle(m3uItem.name),
+                category: m3uItem.category,
+                tmdbWords: normalizeTitle(tmdbItem.name).split(' ').filter(word => word.length > 2),
+                m3uWords: normalizeTitle(m3uItem.name).split(' ').filter(word => word.length > 2)
+              });
+            }
           }
         }
         
         // Debug: se não encontrou match, mostrar alguns exemplos do cache
         if (existingItems.length === 0 && m3uItemsCache.length > 0) {
-          console.log('NENHUM MATCH para:', tmdbItem.name);
-          console.log('Primeiros 5 itens do cache M3U:', m3uItemsCache.slice(0, 5).map(item => item.name));
+          if (process.env.NODE_ENV === 'development') {
+            console.log('NENHUM MATCH para:', tmdbItem.name);
+            console.log('Primeiros 5 itens do cache M3U:', m3uItemsCache.slice(0, 5).map(item => item.name));
+          }
         }
         
         if (existingItems.length > 0) {
@@ -415,7 +462,9 @@ function PedidosContent() {
       setResults(processedResults);
 
     } catch (error) {
-      console.error("Error during search:", error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error("Error during search:", error);
+      }
       toast({
         title: 'Erro na Busca',
         description: 'Ocorreu um erro ao buscar. Tente novamente mais tarde.',

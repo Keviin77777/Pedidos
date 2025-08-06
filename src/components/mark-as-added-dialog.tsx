@@ -14,6 +14,7 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { markRequestAsAdded } from '@/lib/admin';
@@ -27,6 +28,7 @@ interface MarkAsAddedDialogProps {
 export function MarkAsAddedDialog({ requestId, requestTitle, children }: MarkAsAddedDialogProps) {
   const { toast } = useToast();
   const [category, setCategory] = useState('');
+  const [observation, setObservation] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,13 +45,14 @@ export function MarkAsAddedDialog({ requestId, requestTitle, children }: MarkAsA
     
     setIsSubmitting(true);
     try {
-      await markRequestAsAdded(requestId, category);
+      await markRequestAsAdded(requestId, category, observation);
       toast({
         title: 'Pedido Marcado como Adicionado!',
         description: `O pedido para "${requestTitle}" foi atualizado.`,
       });
       setIsOpen(false);
       setCategory('');
+      setObservation('');
     } catch (error) {
        toast({
         title: 'Erro ao Atualizar Pedido',
@@ -66,12 +69,12 @@ export function MarkAsAddedDialog({ requestId, requestTitle, children }: MarkAsA
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Marcar como Adicionado</DialogTitle>
             <DialogDescription>
-              Informe a categoria onde "{requestTitle}" foi adicionado. Essa informação será exibida ao usuário.
+              Informe a categoria onde "{requestTitle}" foi adicionado e uma observação opcional.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -85,6 +88,20 @@ export function MarkAsAddedDialog({ requestId, requestTitle, children }: MarkAsA
                 onChange={(e) => setCategory(e.target.value)}
                 className="col-span-3"
                 placeholder="Ex: Filmes: Lançamentos"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="observation" className="text-right pt-2">
+                Observação
+              </Label>
+              <Textarea
+                id="observation"
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+                className="col-span-3"
+                placeholder="Observação opcional sobre o conteúdo adicionado..."
+                rows={3}
                 disabled={isSubmitting}
               />
             </div>

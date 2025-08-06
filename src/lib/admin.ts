@@ -27,6 +27,7 @@ export interface ContentRequest {
   requestedAt: string; // Storing as ISO string for simplicity
   status: 'Pendente' | 'Adicionado';
   addedToCategory?: string;
+  addedObservation?: string; // Nova observação do admin
   username?: string; // Nome do usuário IPTV que fez o pedido
 }
 
@@ -106,9 +107,18 @@ export const updateContentRequestStatus = async (id: string, status: 'Pendente')
     await updateDoc(requestDoc, { status, addedToCategory: '' }); // Clear category when moving back to pending
 }
 
-export const markRequestAsAdded = async (id: string, category: string): Promise<void> => {
+export const markRequestAsAdded = async (id: string, category: string, observation?: string): Promise<void> => {
   const requestDoc = doc(db, 'content-requests', id);
-  await updateDoc(requestDoc, { status: 'Adicionado', addedToCategory: category });
+  const updateData: any = { 
+    status: 'Adicionado', 
+    addedToCategory: category 
+  };
+  
+  if (observation && observation.trim()) {
+    updateData.addedObservation = observation.trim();
+  }
+  
+  await updateDoc(requestDoc, updateData);
 }
 
 export const deleteContentRequest = async (id: string): Promise<void> => {
