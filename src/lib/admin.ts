@@ -68,7 +68,7 @@ const createOnSnapshotListener = <T extends { reportedAt: string } | { requested
     });
     setData(items);
   }, (error) => {
-    console.error(`Error listening to ${col.id} collection:`, error);
+    // Error listening to collection
     onError(error);
   });
   

@@ -109,7 +109,14 @@ function PedidosContent() {
         return words.join(' ');
       }
       
-      return str;
+      // Procurar por números romanos em qualquer posição
+      for (let i = 0; i < words.length; i++) {
+        if (romanNumerals[words[i]]) {
+          words[i] = romanNumerals[words[i]].toString();
+        }
+      }
+      
+      return words.join(' ');
     };
     
     // Aplicar conversão de números romanos
@@ -131,6 +138,17 @@ function PedidosContent() {
       const m3uBase = m3uLower.replace(/\s+\d+.*$/, '');
       
       if (tmdbBase === m3uBase) {
+        return true;
+      }
+    }
+    
+    // Comparação mais flexível para Rambo
+    if (tmdbLower.includes('rambo') && m3uLower.includes('rambo')) {
+      // Extrair apenas "rambo" de ambos
+      const tmdbRambo = tmdbLower.replace(/rambo.*/, 'rambo').trim();
+      const m3uRambo = m3uLower.replace(/rambo.*/, 'rambo').trim();
+      
+      if (tmdbRambo === m3uRambo) {
         return true;
       }
     }

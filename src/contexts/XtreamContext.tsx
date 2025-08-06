@@ -36,7 +36,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(key);
       });
 
-      console.log('Cache do usuário IPTV limpo com sucesso');
+              // Cache do usuário IPTV limpo com sucesso
     } catch (error) {
       console.error('Erro ao limpar cache do usuário:', error);
     }
@@ -55,12 +55,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
         const isPasswordChanged = oldUserData.password !== newPassword;
         
         if (isUserChanged || isPasswordChanged) {
-          console.log('🔄 Detectada mudança de usuário/servidor:', {
-            oldUser: oldUserData.username,
-            newUser: newUsername,
-            userChanged: isUserChanged,
-            passwordChanged: isPasswordChanged
-          });
+          // Detectada mudança de usuário/servidor
           
           // Limpa cache para novo usuário/servidor
           clearUserCache();
@@ -70,7 +65,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
       
       return false;
     } catch (error) {
-      console.error('Erro ao detectar mudança de servidor/usuário:', error);
+              // Erro ao detectar mudança de servidor/usuário
       return false;
     }
   };
@@ -91,7 +86,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
             const now = new Date();
             
             if (expDate < now) {
-              console.log('Conta IPTV expirada, removendo credenciais salvas');
+              // Conta IPTV expirada, removendo credenciais salvas
               localStorage.removeItem('@xtream_user');
               localStorage.removeItem('@xtream_auth_state');
               clearUserCache();
@@ -104,7 +99,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
           // Tenta fazer login automático com as credenciais salvas
           try {
             setIsAutoLoggingIn(true);
-            console.log('Tentando login automático IPTV...');
+            // Tentando login automático IPTV...
             
             const freshUserData = await XtreamAuthService.login(userData.username, userData.password);
             
@@ -114,9 +109,9 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem('@xtream_user', JSON.stringify(freshUserData));
             localStorage.setItem('@xtream_auth_state', 'true');
             
-            console.log('✅ Login automático IPTV realizado com sucesso');
+            // Login automático IPTV realizado com sucesso
           } catch (autoLoginError) {
-            console.error('❌ Erro no login automático IPTV:', autoLoginError);
+            // Erro no login automático IPTV
             
             // Se o login automático falhou, remove as credenciais salvas
             localStorage.removeItem('@xtream_user');
@@ -128,7 +123,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Erro ao carregar credenciais IPTV:', error);
+        // Erro ao carregar credenciais IPTV
         setUserInfo(null);
       } finally {
         setIsLoading(false);
@@ -151,7 +146,7 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('@xtream_user', JSON.stringify(userData));
       localStorage.setItem('@xtream_auth_state', 'true');
       
-      console.log('✅ Login IPTV realizado com sucesso');
+              // Login IPTV realizado com sucesso
       return true;
     } catch (error) {
       console.error('❌ Erro no login IPTV:', error);
@@ -178,9 +173,9 @@ export function XtreamProvider({ children }: { children: React.ReactNode }) {
       // Limpar cache do usuário
       clearUserCache();
       
-      console.log('✅ Logout IPTV realizado com sucesso');
+              // Logout IPTV realizado com sucesso
     } catch (error) {
-      console.error('❌ Erro ao fazer logout IPTV:', error);
+              // Erro ao fazer logout IPTV
       // Mesmo com erro, limpar dados locais
       setUserInfo(null);
       localStorage.removeItem('@xtream_user');

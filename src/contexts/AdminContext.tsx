@@ -31,7 +31,7 @@ const initializeDefaultCredentials = async () => {
         username: 'admin',
         password: 'admin'
       });
-      console.log('Credenciais padrão inicializadas no Firebase');
+              // Credenciais padrão inicializadas no Firebase
     }
   } catch (error) {
     console.error('Erro ao inicializar credenciais padrão:', error);
@@ -103,7 +103,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             setCredentials(newCredentials);
             // Sincronizar com localStorage
             localStorage.setItem('adminCredentials', JSON.stringify(newCredentials));
-            console.log('Credenciais sincronizadas do Firebase');
+            // Credenciais sincronizadas do Firebase
           }
           setIsLoading(false);
         }, (error) => {
@@ -153,9 +153,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const adminDocRef = doc(db, 'admin', 'credentials');
       await setDoc(adminDocRef, newCredentials);
       
-      console.log('Credenciais atualizadas e sincronizadas com Firebase');
+              // Credenciais atualizadas e sincronizadas com Firebase
     } catch (error) {
-      console.error('Erro ao atualizar credenciais:', error);
+              // Erro ao atualizar credenciais
       throw error;
     }
   };

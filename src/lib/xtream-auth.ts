@@ -47,7 +47,7 @@ export class XtreamAuthService {
         throw new Error(data.error || `Erro HTTP: ${response.status}`);
       }
 
-      console.log('✅ Login Xtream realizado com sucesso:', data);
+      // Login Xtream realizado com sucesso
 
       return data;
     } catch (error) {
@@ -80,9 +80,9 @@ export class XtreamAuthService {
     try {
       // Alguns servidores Xtream não têm endpoint de logout específico
       // Apenas limpamos dados locais
-      console.log('📤 Logout Xtream para usuário:', username);
+      // Logout Xtream para usuário
     } catch (error) {
-      console.error('Erro no logout Xtream:', error);
+      // Erro no logout Xtream
     }
   }
 }

@@ -127,7 +127,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     return allItems;
 
   } catch (error) {
-    console.error('Error fetching or parsing data from XUI One API:', error);
+    // Error fetching or parsing data from XUI One API
     return [];
   }
 }
