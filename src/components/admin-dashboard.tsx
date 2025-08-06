@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+
 import {
   Card,
   CardContent,
@@ -46,6 +46,17 @@ export default function AdminDashboard() {
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
   const { toast } = useToast();
+
+  // Debug: verificar URLs das imagens
+  useEffect(() => {
+    if (requests.length > 0) {
+      requests.forEach(req => {
+        if (req.logo) {
+          console.log('URL da imagem:', req.logo, 'para:', req.title);
+        }
+      });
+    }
+  }, [requests]);
 
   useEffect(() => {
     const unsubscribeRequests = onRequestsUpdated(
@@ -193,13 +204,14 @@ export default function AdminDashboard() {
                                              <TableCell>
                                                        <div className="flex items-center gap-6 py-3">
                                <div className="w-24 h-36 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                                 <Image
+                                 <img
                                      src={req.logo || 'https://placehold.co/400x600.png'}
                                      alt={`Capa de ${req.title}`}
-                                     fill
-                                     className="object-cover"
-                                     sizes="96px"
-                                     data-ai-hint="movie poster"
+                                     className="w-full h-full object-cover"
+                                     onError={(e) => {
+                                       console.error('Erro ao carregar imagem:', req.logo);
+                                       e.currentTarget.src = 'https://placehold.co/400x600.png';
+                                     }}
                                  />
                                </div>
                                                                <div className="flex-1">
@@ -339,13 +351,10 @@ export default function AdminDashboard() {
                                              <TableCell>
                                                        <div className="flex items-center gap-6 py-3">
                                 <div className="w-24 h-36 relative flex-shrink-0 rounded-md overflow-hidden bg-muted">
-                                  <Image
+                                  <img
                                       src={report.logo || 'https://placehold.co/400x600.png'}
                                       alt={`Capa de ${report.title}`}
-                                      fill
-                                      className="object-cover"
-                                      sizes="96px"
-                                      data-ai-hint="movie poster"
+                                      className="w-full h-full object-cover"
                                   />
                                 </div>
                                 <div className="font-bold text-lg">{report.title}</div>
