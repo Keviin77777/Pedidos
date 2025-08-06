@@ -16,6 +16,7 @@ import { M3uContext } from '@/contexts/M3uContext';
 import { onRequestsUpdated } from '@/lib/admin';
 import type { ContentRequest } from '@/lib/admin';
 import { RequestWithNotesDialog } from '@/components/request-with-notes-dialog';
+import { SeriesUpdateDialog } from '@/components/series-update-dialog';
 import { XtreamProvider, useXtream } from '@/contexts/XtreamContext';
 import { Label } from '@/components/ui/label';
 
@@ -397,6 +398,7 @@ function PedidosContent() {
             synopsis: res.overview || 'Nenhuma sinopse disponível.',
             logo: res.poster_path ? `${TMDB_IMAGE_BASE_URL}${res.poster_path}` : null,
             category: res.media_type === 'tv' || type === 'tv' ? 'Série' : 'Filme',
+            type: res.media_type === 'tv' || type === 'tv' ? 'series' : 'movie',
             url: '',
           }));
       }
@@ -438,36 +440,16 @@ function PedidosContent() {
         let existingItems: M3UItem[] = [];
         
         // Debug: verificar se há itens no cache
-        if (m3uItemsCache.length === 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('CACHE M3U VAZIO - nenhum item carregado');
-          }
-        }
+        // Removido para produção
         
         for (const m3uItem of m3uItemsCache) {
           if (isExactMatch(tmdbItem.name, m3uItem.name)) {
             existingItems.push(m3uItem);
-            if (process.env.NODE_ENV === 'development') {
-              console.log('MATCH ENCONTRADO:', {
-                tmdb: tmdbItem.name,
-                m3u: m3uItem.name,
-                normalizedTmdb: normalizeTitle(tmdbItem.name),
-                normalizedM3u: normalizeTitle(m3uItem.name),
-                category: m3uItem.category,
-                tmdbWords: normalizeTitle(tmdbItem.name).split(' ').filter(word => word.length > 2),
-                m3uWords: normalizeTitle(m3uItem.name).split(' ').filter(word => word.length > 2)
-              });
-            }
+            // Debug: match encontrado - removido para produção
           }
         }
         
-        // Debug: se não encontrou match, mostrar alguns exemplos do cache
-        if (existingItems.length === 0 && m3uItemsCache.length > 0) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('NENHUM MATCH para:', tmdbItem.name);
-            console.log('Primeiros 5 itens do cache M3U:', m3uItemsCache.slice(0, 5).map(item => item.name));
-          }
-        }
+        // Debug: se não encontrou match - removido para produção
         
         if (existingItems.length > 0) {
             // Usar a primeira categoria encontrada (ou a mais relevante)
@@ -570,12 +552,21 @@ function PedidosContent() {
                                  Solicitado
                               </Button>
                            ) : (
-                              <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
-                                <p className="font-bold">Já está no sistema</p>
-                                {item.existingCategory && (
-                                  <p className="truncate">
-                                    em: <span className="text-green-500 font-semibold">{item.existingCategory}</span>
-                                  </p>
+                              <div className="flex flex-col gap-2 w-full">
+                                <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground cursor-default">
+                                  <p className="font-bold">Já está no sistema</p>
+                                  {item.existingCategory && (
+                                    <p className="truncate">
+                                      em: <span className="text-green-500 font-semibold">{item.existingCategory}</span>
+                                    </p>
+                                  )}
+                                </div>
+                                {item.type === 'series' && (
+                                  <SeriesUpdateDialog item={item}>
+                                    <Button variant="outline" size="sm" className="w-full text-xs">
+                                      Pedir Atualização
+                                    </Button>
+                                  </SeriesUpdateDialog>
                                 )}
                               </div>
                            )}

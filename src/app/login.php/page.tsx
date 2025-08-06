@@ -40,7 +40,7 @@ function AdminLoginPageContent() {
 
   if (isAuthenticated) {
     return (
-      <div className="h-full flex flex-col">
+      <div className="h-screen">
         <AdminDashboard />
       </div>
     );

@@ -114,15 +114,7 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     // Combine both lists and return
     const allItems = [...movieItems, ...seriesItems];
     
-    // Debug: log para verificar se os dados estão sendo carregados
-    if (process.env.NODE_ENV === 'development') {
-      console.log('M3U Items carregados:', {
-        totalItems: allItems.length,
-        movies: movieItems.length,
-        series: seriesItems.length,
-        sampleItems: allItems.slice(0, 5).map(item => item.name)
-      });
-    }
+    // Debug: log removido para produção
       
     return allItems;
 
