@@ -39,7 +39,11 @@ function AdminLoginPageContent() {
   };
 
   if (isAuthenticated) {
-    return <AdminDashboard />;
+    return (
+      <div className="h-full flex flex-col">
+        <AdminDashboard />
+      </div>
+    );
   }
 
   return (
