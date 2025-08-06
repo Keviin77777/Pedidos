@@ -34,6 +34,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MarkAsAddedDialog } from './mark-as-added-dialog';
+import { MarkAsCommunicatedDialog } from './mark-as-communicated-dialog';
+import { EditObservationDialog } from './edit-observation-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { AdminSettingsDialog } from './admin-settings-dialog';
 
@@ -206,6 +208,9 @@ export default function AdminDashboard() {
                                   {req.status === 'Adicionado' && req.addedToCategory && (
                                     <div className="text-xs text-primary/80">Adicionado em: {req.addedToCategory}</div>
                                   )}
+                                  {req.status === 'Comunicado' && req.communicatedMessage && (
+                                    <div className="text-xs text-orange-500/80">Comunicado: {req.communicatedMessage}</div>
+                                  )}
                                 </div>
                            </div>
                        </TableCell>
@@ -232,12 +237,16 @@ export default function AdminDashboard() {
                          </TableCell>
                          <TableCell>
                            <div className="py-3">
-                            <Badge 
-                              variant={req.status === 'Pendente' ? 'destructive' : req.status === 'Adicionado' ? 'default' : 'secondary'}
-                              className="text-sm px-3 py-1"
-                            >
-                              {req.status}
-                            </Badge>
+                                                      <Badge 
+                            variant={
+                              req.status === 'Pendente' ? 'destructive' : 
+                              req.status === 'Adicionado' ? 'default' : 
+                              req.status === 'Comunicado' ? 'secondary' : 'secondary'
+                            }
+                            className="text-sm px-3 py-1"
+                          >
+                            {req.status}
+                          </Badge>
                           </div>
                         </TableCell>
                        <TableCell className="text-right">
@@ -254,6 +263,18 @@ export default function AdminDashboard() {
                                   Marcar como Adicionado
                                 </div>
                               </MarkAsAddedDialog>
+                              <MarkAsCommunicatedDialog requestId={req.id} requestTitle={req.title}>
+                                <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                  Comunicado
+                                </div>
+                              </MarkAsCommunicatedDialog>
+                              {req.status === 'Adicionado' && (
+                                <EditObservationDialog requestId={req.id} requestTitle={req.title} currentObservation={req.addedObservation}>
+                                  <div className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                    Editar Observação
+                                  </div>
+                                </EditObservationDialog>
+                              )}
                               {req.status !== 'Pendente' && (
                                 <DropdownMenuItem onClick={() => handleSetToPending(req.id)}>
                                   Marcar como Pendente

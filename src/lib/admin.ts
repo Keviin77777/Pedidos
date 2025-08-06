@@ -9,6 +9,7 @@ import {
   deleteDoc,
   doc,
   Timestamp,
+  serverTimestamp,
   query,
   orderBy,
   onSnapshot,
@@ -25,10 +26,13 @@ export interface ContentRequest {
   logo?: string | null;
   notes?: string;
   requestedAt: string; // Storing as ISO string for simplicity
-  status: 'Pendente' | 'Adicionado';
+  status: 'Pendente' | 'Adicionado' | 'Comunicado';
   addedToCategory?: string;
   addedObservation?: string; // Nova observação do admin
   username?: string; // Nome do usuário IPTV que fez o pedido
+  communicatedMessage?: string;
+  communicatedAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProblemReport {
@@ -146,4 +150,21 @@ export const updateProblemReportStatus = async (id: string, status: ProblemRepor
 export const deleteProblemReport = async (id: string): Promise<void> => {
     const reportDoc = doc(db, 'problem-reports', id);
     await deleteDoc(reportDoc);
+};
+
+export const markRequestAsCommunicated = async (id: string, message: string): Promise<void> => {
+  const docRef = doc(db, 'content-requests', id);
+  await updateDoc(docRef, {
+    status: 'Comunicado',
+    communicatedMessage: message,
+    communicatedAt: serverTimestamp(),
+  });
+};
+
+export const updateRequestObservation = async (id: string, observation: string): Promise<void> => {
+  const docRef = doc(db, 'content-requests', id);
+  await updateDoc(docRef, {
+    addedObservation: observation,
+    updatedAt: serverTimestamp(),
+  });
 };

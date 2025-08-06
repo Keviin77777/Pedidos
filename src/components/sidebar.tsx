@@ -13,6 +13,7 @@ import { UserInfoDialog } from '@/components/user-info-dialog';
 const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
   { href: '/pedidos-adicionados', label: 'Pedidos Adicionados', icon: Sparkles },
+  { href: '/comunicados', label: 'Comunicado Conteudos', icon: Ticket },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
 ];
 

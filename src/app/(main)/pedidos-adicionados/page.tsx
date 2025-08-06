@@ -73,13 +73,15 @@ export default function AddedItemsPage() {
                     />
                     <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground w-full cursor-default">
                       <p className="font-bold">Adicionado!</p>
-                      {item.addedToCategory && <p className="truncate">Em: {item.addedToCategory}</p>}
-                                             {item.addedObservation && (
-                         <div className="mt-1 p-1 bg-primary/10 rounded text-primary text-xs">
-                           <p className="font-semibold">Observação:</p>
-                           <p className="break-words">{item.addedObservation}</p>
-                         </div>
-                       )}
+                      {item.addedToCategory && (
+                        <p className="truncate">Em: {item.addedToCategory}</p>
+                      )}
+                      {item.addedObservation && (
+                        <div className="mt-1 p-1 bg-primary/10 rounded text-primary text-xs">
+                          <p className="font-semibold">Observação:</p>
+                          <p className="break-words">{item.addedObservation}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
