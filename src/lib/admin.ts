@@ -27,6 +27,7 @@ export interface ContentRequest {
   requestedAt: string; // Storing as ISO string for simplicity
   status: 'Pendente' | 'Adicionado';
   addedToCategory?: string;
+  username?: string; // Nome do usuário IPTV que fez o pedido
 }
 
 export interface ProblemReport {

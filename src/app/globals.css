@@ -31,6 +31,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 220 20% 5%;
     --foreground: 210 40% 98%;
@@ -48,8 +49,8 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
+    --border: 220 20% 15%;
+    --input: 220 20% 15%;
     --ring: 142 76% 36%;
     --chart-1: 142 70% 50%;
     --chart-2: 160 60% 45%;
@@ -66,8 +67,44 @@
   body {
     @apply h-full bg-background text-foreground;
   }
+  
+  /* Remove bordas brancas dos cards e elementos */
   * {
     @apply border-border;
+  }
+  
+  /* Garantir que cards não tenham bordas brancas */
+  .card, [class*="card"] {
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  /* Remover bordas brancas do menu lateral */
+  .sidebar, [class*="sidebar"] {
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  /* Garantir que todos os elementos usem as cores do tema */
+  .dark * {
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  /* Remover bordas brancas específicas */
+  .dark .border,
+  .dark [class*="border"] {
+    border-color: hsl(var(--border)) !important;
+  }
+  
+  /* Garantir que cards tenham bordas escuras */
+  .dark .card,
+  .dark [class*="card"] {
+    border-color: hsl(var(--border)) !important;
+    background-color: hsl(var(--card)) !important;
+  }
+  
+  /* Remover sombras brancas */
+  .dark .shadow-sm,
+  .dark .shadow {
+    box-shadow: none !important;
   }
 }
 

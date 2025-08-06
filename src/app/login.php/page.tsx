@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAdmin, AdminProvider } from '@/contexts/AdminContext';
+import { Toaster } from '@/components/ui/toaster';
 
-export default function AdminLoginPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+function AdminLoginPageContent() {
+  const { credentials, isAuthenticated, setIsAuthenticated } = useAdmin();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -19,8 +21,9 @@ export default function AdminLoginPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simple hardcoded credentials for now
-    if (username === 'admin' && password === 'admin') {
+    
+    // Verificar credenciais do contexto (Firebase)
+    if (credentials && username === credentials.username && password === credentials.password) {
       setTimeout(() => {
         setIsAuthenticated(true);
         setIsLoading(false);
@@ -30,7 +33,7 @@ export default function AdminLoginPage() {
         title: 'Erro de Autenticação',
         description: 'Credenciais inválidas. Tente novamente.',
         variant: 'destructive'
-      })
+      });
       setIsLoading(false);
     }
   };
@@ -88,5 +91,18 @@ export default function AdminLoginPage() {
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <AdminProvider>
+      <div className="dark h-full">
+        <main className="h-full bg-background text-foreground">
+          <AdminLoginPageContent />
+        </main>
+        <Toaster />
+      </div>
+    </AdminProvider>
   );
 }

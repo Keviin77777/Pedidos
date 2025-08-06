@@ -4,9 +4,9 @@
 import type { M3UItem } from './types';
 
 // The server URL and credentials are now securely accessed from environment variables
-const API_URL = process.env.XUI_API_URL;
-const USERNAME = process.env.XUI_USERNAME;
-const PASSWORD = process.env.XUI_PASSWORD;
+const API_URL = process.env.XUI_API_URL || 'http://dnscine.top';
+const USERNAME = process.env.XUI_USERNAME || 'Vodsm3u789DS';
+const PASSWORD = process.env.XUI_PASSWORD || 'w5NwV8dPXE';
 
 interface XuiOneContent {
   name: string;
@@ -113,6 +113,14 @@ export async function getM3UItems(): Promise<M3UItem[]> {
     
     // Combine both lists and return
     const allItems = [...movieItems, ...seriesItems];
+    
+    // Debug: log para verificar se os dados estão sendo carregados
+    console.log('M3U Items carregados:', {
+      totalItems: allItems.length,
+      movies: movieItems.length,
+      series: seriesItems.length,
+      sampleItems: allItems.slice(0, 5).map(item => item.name)
+    });
       
     return allItems;
 

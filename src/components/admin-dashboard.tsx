@@ -35,6 +35,8 @@ import { MoreHorizontal, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MarkAsAddedDialog } from './mark-as-added-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { AdminSettingsDialog } from './admin-settings-dialog';
+
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState<ContentRequest[]>([]);
@@ -147,11 +149,14 @@ export default function AdminDashboard() {
   return (
     <>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-        <div className="grid gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Painel Admin</h1>
-          <p className="text-muted-foreground">
-            Gerencie as solicitações de novos conteúdos e os relatórios de problemas.
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="grid gap-4">
+            <h1 className="text-3xl font-bold tracking-tight">Painel Admin</h1>
+            <p className="text-muted-foreground">
+              Gerencie as solicitações de novos conteúdos e os relatórios de problemas.
+            </p>
+          </div>
+          <AdminSettingsDialog />
         </div>
         <Tabs defaultValue="requests">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -174,6 +179,7 @@ export default function AdminDashboard() {
                   <>
                     <TableHead>Título</TableHead>
                     <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                    <TableHead className="hidden lg:table-cell">Usuário</TableHead>
                     <TableHead className="hidden md:table-cell">Data</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -202,6 +208,17 @@ export default function AdminDashboard() {
                           </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{req.type}</TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="text-sm">
+                          {req.username ? (
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium">{req.username}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {new Date(req.requestedAt).toLocaleDateString("pt-BR", {
                           day: '2-digit', month: '2-digit', year: 'numeric'

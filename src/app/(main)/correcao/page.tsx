@@ -12,7 +12,7 @@ import { CorrectionDialog } from '@/components/correction-dialog';
 import { M3uContext } from '@/contexts/M3uContext';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const TMDB_API_KEY = '279e039eafd4ccc7c289a589c9b613e3';
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface EnrichedM3UItem extends M3UItem {

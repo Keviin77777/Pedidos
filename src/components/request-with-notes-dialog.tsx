@@ -17,6 +17,7 @@ import { Textarea } from './ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { saveContentRequest } from '@/lib/admin';
+import { useXtream } from '@/contexts/XtreamContext';
 import type { M3UItem } from '@/lib/types';
 
 interface RequestWithNotesDialogProps {
@@ -26,6 +27,7 @@ interface RequestWithNotesDialogProps {
 
 export function RequestWithNotesDialog({ item, children }: RequestWithNotesDialogProps) {
   const { toast } = useToast();
+  const { userInfo } = useXtream();
   const [notes, setNotes] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +41,7 @@ export function RequestWithNotesDialog({ item, children }: RequestWithNotesDialo
         type: item.category,
         logo: item.logo,
         notes: notes,
+        username: userInfo?.username || 'Usuário desconhecido',
       });
 
       toast({

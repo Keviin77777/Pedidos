@@ -8,6 +8,7 @@ import LoadingOverlay from '@/components/loading-overlay';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import PageWrapper from './page-wrapper';
 
 export default function MainAppLayout({
   children,
@@ -17,6 +18,7 @@ export default function MainAppLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <PageWrapper>
       <M3uProvider>
         <LoadingOverlay />
         <div className="flex h-screen bg-background text-foreground">
@@ -44,5 +46,6 @@ export default function MainAppLayout({
         </div>
         <Toaster />
       </M3uProvider>
+    </PageWrapper>
   );
 }
