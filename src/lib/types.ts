@@ -5,4 +5,6 @@ export interface M3UItem {
   url: string;
   synopsis?: string;
   type?: 'movie' | 'series';
+  vod_id?: number; // ID para filmes
+  series_id?: number; // ID para séries
 }

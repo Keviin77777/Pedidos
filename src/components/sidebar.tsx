@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wrench, Ticket, Sparkles, LogOut, User } from 'lucide-react';
+import { Home, Wrench, Ticket, Sparkles, LogOut, User, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useXtream } from '@/contexts/XtreamContext';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
   { href: '/pedidos-adicionados', label: 'Pedidos Adicionados', icon: Sparkles },
   { href: '/comunicados', label: 'Comunicado Conteudos', icon: Ticket },
+  { href: '/atualizacoes', label: 'Atualização de Conteúdo', icon: RefreshCw },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
 ];
 

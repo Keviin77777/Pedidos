@@ -47,3 +47,5 @@ firestore-debug.log
 # logs
 logs/
 *.log
+# Local Netlify folder
+.netlify

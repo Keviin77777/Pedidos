@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 import {
   Card,
@@ -21,6 +21,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   deleteContentRequest,
   deleteProblemReport,
@@ -31,7 +33,7 @@ import {
 } from '@/lib/admin';
 import type { ContentRequest, ProblemReport } from '@/lib/admin';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Loader2, Search, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MarkAsAddedDialog } from './mark-as-added-dialog';
 import { MarkAsCommunicatedDialog } from './mark-as-communicated-dialog';
@@ -45,18 +47,49 @@ export default function AdminDashboard() {
   const [reports, setReports] = useState<ProblemReport[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingReports, setLoadingReports] = useState(true);
+  
+  // Estados para filtros e busca
+  const [searchTitle, setSearchTitle] = useState('');
+  const [searchUser, setSearchUser] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'movie' | 'series'>('all');
+  
+  // Estados para filtros dos relatórios
+  const [searchReportTitle, setSearchReportTitle] = useState('');
+  const [filterReportStatus, setFilterReportStatus] = useState<'all' | 'Aberto' | 'Resolvido'>('all');
+  
   const { toast } = useToast();
 
-  // Debug: verificar URLs das imagens
-  useEffect(() => {
-    if (requests.length > 0) {
-      requests.forEach(req => {
-        if (req.logo) {
-          console.log('URL da imagem:', req.logo, 'para:', req.title);
-        }
-      });
-    }
-  }, [requests]);
+  // Filtrar requests baseado nos critérios de busca
+  const filteredRequests = useMemo(() => {
+    return requests.filter(request => {
+      // Filtro por título
+      const titleMatch = searchTitle === '' || 
+        request.title.toLowerCase().includes(searchTitle.toLowerCase());
+      
+      // Filtro por usuário
+      const userMatch = searchUser === '' || 
+        (request.username && request.username.toLowerCase().includes(searchUser.toLowerCase()));
+      
+      // Filtro por tipo
+      const typeMatch = filterType === 'all' || request.type === filterType;
+      
+      return titleMatch && userMatch && typeMatch;
+    });
+  }, [requests, searchTitle, searchUser, filterType]);
+
+  // Filtrar reports baseado nos critérios de busca
+  const filteredReports = useMemo(() => {
+    return reports.filter(report => {
+      // Filtro por título
+      const titleMatch = searchReportTitle === '' || 
+        report.title.toLowerCase().includes(searchReportTitle.toLowerCase());
+      
+      // Filtro por status
+      const statusMatch = filterReportStatus === 'all' || report.status === filterReportStatus;
+      
+      return titleMatch && statusMatch;
+    });
+  }, [reports, searchReportTitle, filterReportStatus]);
 
   useEffect(() => {
     const unsubscribeRequests = onRequestsUpdated(
@@ -188,8 +221,51 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto">
+                {/* Filtros e Busca */}
+                <div className="mb-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Busca por título */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Buscar por título..."
+                        value={searchTitle}
+                        onChange={(e) => setSearchTitle(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    
+                    {/* Busca por usuário */}
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Buscar por usuário..."
+                        value={searchUser}
+                        onChange={(e) => setSearchUser(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    
+                    {/* Filtro por tipo */}
+                    <Select value={filterType} onValueChange={(value: 'all' | 'movie' | 'series') => setFilterType(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filtrar por tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="movie">Filmes</SelectItem>
+                        <SelectItem value="series">Séries</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Contador de resultados */}
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {filteredRequests.length} de {requests.length} solicitações
+                  </div>
+                </div>
                 {renderTableBody(
-                  requests,
+                  filteredRequests,
                   loadingRequests,
                   <>
                     <TableHead>Título</TableHead>
@@ -336,8 +412,41 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto">
-                 {renderTableBody(
-                  reports,
+                {/* Filtros e Busca para Relatórios */}
+                <div className="mb-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Busca por título */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input
+                        placeholder="Buscar por título..."
+                        value={searchReportTitle}
+                        onChange={(e) => setSearchReportTitle(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    
+                    {/* Filtro por status */}
+                    <Select value={filterReportStatus} onValueChange={(value: 'all' | 'Aberto' | 'Resolvido') => setFilterReportStatus(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="Aberto">Abertos</SelectItem>
+                        <SelectItem value="Resolvido">Resolvidos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Contador de resultados */}
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {filteredReports.length} de {reports.length} relatórios
+                  </div>
+                </div>
+                
+                {renderTableBody(
+                  filteredReports,
                   loadingReports,
                   <>
                     <TableHead>Título do Conteúdo</TableHead>

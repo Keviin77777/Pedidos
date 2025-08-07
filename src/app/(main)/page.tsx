@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { M3uContext } from '@/contexts/M3uContext';
 import { onRequestsUpdated } from '@/lib/admin';
 import type { ContentRequest } from '@/lib/admin';
+import { getAllM3UItems } from '@/lib/m3u';
 import { RequestWithNotesDialog } from '@/components/request-with-notes-dialog';
 import { SeriesUpdateDialog } from '@/components/series-update-dialog';
 import { XtreamProvider, useXtream } from '@/contexts/XtreamContext';
@@ -37,9 +38,28 @@ function PedidosContent() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
+  const [allM3UItemsCache, setAllM3UItemsCache] = useState<M3UItem[]>([]);
+  const [isAllM3UItemsLoading, setIsAllM3UItemsLoading] = useState(true);
 
   const { m3uItems: m3uItemsCache, isInitialLoading: isM3uLoading } = useContext(M3uContext);
   const { toast } = useToast();
+
+  // Carregar todos os dados M3U uma vez no início
+  useEffect(() => {
+    const loadAllM3UItems = async () => {
+      try {
+        setIsAllM3UItemsLoading(true);
+        const allItems = await getAllM3UItems();
+        setAllM3UItemsCache(allItems);
+      } catch (error) {
+        // Silenciar erro para produção
+      } finally {
+        setIsAllM3UItemsLoading(false);
+      }
+    };
+
+    loadAllM3UItems();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onRequestsUpdated(
@@ -410,7 +430,7 @@ function PedidosContent() {
   };
 
   const handleSearch = useCallback(async (query: string, type: string) => {
-    if (isM3uLoading || query.trim().length < 3) {
+    if (isM3uLoading || isAllM3UItemsLoading || query.trim().length < 3) {
       setResults([]);
       setSearchPerformed(false);
       return;
@@ -436,20 +456,14 @@ function PedidosContent() {
             return {...tmdbItem, status: 'requested'};
         }
         
-        // Buscar por correspondência exata no cache M3U
+        // Buscar por correspondência exata usando o cache M3U
         let existingItems: M3UItem[] = [];
         
-        // Debug: verificar se há itens no cache
-        // Removido para produção
-        
-        for (const m3uItem of m3uItemsCache) {
+        for (const m3uItem of allM3UItemsCache) {
           if (isExactMatch(tmdbItem.name, m3uItem.name)) {
             existingItems.push(m3uItem);
-            // Debug: match encontrado - removido para produção
           }
         }
-        
-        // Debug: se não encontrou match - removido para produção
         
         if (existingItems.length > 0) {
             // Usar a primeira categoria encontrada (ou a mais relevante)
@@ -474,7 +488,7 @@ function PedidosContent() {
     } finally {
         setIsLoading(false);
     }
-  }, [toast, requestedItems, m3uItemsCache, isM3uLoading]);
+  }, [toast, requestedItems, allM3UItemsCache, isM3uLoading, isAllM3UItemsLoading]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -510,9 +524,9 @@ function PedidosContent() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
-                disabled={isM3uLoading}
+                disabled={isM3uLoading || isAllM3UItemsLoading}
               />
-               {isLoading && (
+               {(isLoading || isAllM3UItemsLoading) && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                 </div>
