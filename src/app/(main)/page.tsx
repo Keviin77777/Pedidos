@@ -26,8 +26,10 @@ const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '279e039eafd4ccc7c2
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 interface SearchResult extends M3UItem {
-  status: 'existing' | 'requestable' | 'loading' | 'requested';
+  status: 'existing' | 'requestable' | 'loading' | 'requested' | 'added';
   existingCategory?: string;
+  addedCategory?: string;
+  addedObservation?: string;
 }
 
 // Componente principal dos pedidos
@@ -38,6 +40,7 @@ function PedidosContent() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [requestedItems, setRequestedItems] = useState<Set<string>>(new Set());
+  const [addedItems, setAddedItems] = useState<Map<string, { category: string; observation?: string }>>(new Map());
 
 
   const { m3uItems: m3uItemsCache, allM3uItems: allM3UItemsCache, isInitialLoading: isM3uLoading } = useContext(M3uContext);
@@ -50,6 +53,16 @@ function PedidosContent() {
         (allRequests) => {
             const requestedTitles = new Set(allRequests.filter(r => r.status === 'Pendente').map(r => r.title));
             setRequestedItems(requestedTitles);
+            
+            // Criar mapa de itens adicionados com categoria e observação
+            const addedMap = new Map<string, { category: string; observation?: string }>();
+            allRequests.filter(r => r.status === 'Adicionado').forEach(request => {
+                addedMap.set(request.title, {
+                    category: request.addedToCategory || 'Categoria não especificada',
+                    observation: request.addedObservation
+                });
+            });
+            setAddedItems(addedMap);
         },
         (error) => {
             console.error("Failed to listen for request updates:", error);
@@ -435,6 +448,7 @@ function PedidosContent() {
       const processedResults = tmdbResults.map((tmdbItem): SearchResult => {
         // Use the live set of requested titles from our real-time listener
         const isRequested = requestedItems.has(tmdbItem.name);
+        const isAdded = addedItems.has(tmdbItem.name);
 
         if (isRequested) {
             return {...tmdbItem, status: 'requested'};
@@ -454,6 +468,12 @@ function PedidosContent() {
             const firstCategory = existingItems[0].category;
             return {...tmdbItem, status: 'existing', existingCategory: firstCategory };
         }
+        
+        // Se não está no sistema M3U mas foi marcado como adicionado no admin
+        if (isAdded) {
+            return {...tmdbItem, status: 'added', addedCategory: addedItems.get(tmdbItem.name)?.category, addedObservation: addedItems.get(tmdbItem.name)?.observation};
+        }
+        
         return {...tmdbItem, status: 'requestable'};
       });
 
@@ -472,7 +492,7 @@ function PedidosContent() {
     } finally {
         setIsLoading(false);
     }
-  }, [toast, requestedItems, allM3UItemsCache, isM3uLoading]);
+  }, [toast, requestedItems, allM3UItemsCache, isM3uLoading, addedItems]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -549,6 +569,23 @@ function PedidosContent() {
                                   <Check className="mr-2 h-4 w-4" />
                                  Solicitado
                               </Button>
+                           ) : item.status === 'added' ? (
+                              <div className="flex flex-col gap-2 w-full">
+                                <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground cursor-default">
+                                  <p className="font-bold">Já está no sistema</p>
+                                  {item.addedCategory && (
+                                    <p className="truncate">
+                                      em: <span className="text-green-500 font-semibold">{item.addedCategory}</span>
+                                    </p>
+                                  )}
+                                  {item.addedObservation && (
+                                    <div className="mt-1 p-1 bg-primary/10 rounded text-primary text-xs">
+                                      <p className="font-semibold">Observação:</p>
+                                      <p className="break-words">{item.addedObservation}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                            ) : (
                               <div className="flex flex-col gap-2 w-full">
                                 <div className="text-center text-xs p-2 rounded-md bg-secondary text-secondary-foreground cursor-default">
