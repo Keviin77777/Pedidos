@@ -139,7 +139,7 @@ export default function AtualizacoesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {movies.map((movie) => (
                 <ContentCard key={`${movie.name}-${movie.category}`} item={movie} />
               ))}
@@ -162,7 +162,7 @@ export default function AtualizacoesPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {series.map((serie) => (
                 <ContentCard key={`${serie.name}-${serie.category}`} item={serie} />
               ))}

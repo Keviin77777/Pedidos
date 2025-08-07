@@ -3,6 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 const DNS_SERVER = 'http://dnscine.top:80';
 
 export async function POST(request: NextRequest) {
+  return handleXtreamAuth(request);
+}
+
+export async function GET(request: NextRequest) {
+  return handleXtreamAuth(request);
+}
+
+async function handleXtreamAuth(request: NextRequest) {
   try {
     const { username, password } = await request.json();
 

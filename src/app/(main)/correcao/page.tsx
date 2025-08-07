@@ -11,7 +11,7 @@ import ContentCardSkeleton from '@/components/content-card-skeleton';
 import { CorrectionDialog } from '@/components/correction-dialog';
 import { M3uContext } from '@/contexts/M3uContext';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getAllM3UItems } from '@/lib/m3u';
+
 
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '279e039eafd4ccc7c289a589c9b613e3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
@@ -25,26 +25,9 @@ export default function CorrectionPage() {
   const [searchType, setSearchType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [filteredItems, setFilteredItems] = useState<EnrichedM3UItem[]>([]);
-  const [allM3UItemsCache, setAllM3UItemsCache] = useState<M3UItem[]>([]);
-  const [isAllM3UItemsLoading, setIsAllM3UItemsLoading] = useState(true);
-  const { m3uItems: m3uItemsCache, isInitialLoading: isCacheLoading } = useContext(M3uContext);
+  const { m3uItems: m3uItemsCache, allM3uItems: allM3UItemsCache, isInitialLoading: isCacheLoading } = useContext(M3uContext);
 
-  // Carregar todos os dados M3U uma vez no início
-  useEffect(() => {
-    const loadAllM3UItems = async () => {
-      try {
-        setIsAllM3UItemsLoading(true);
-        const allItems = await getAllM3UItems();
-        setAllM3UItemsCache(allItems);
-      } catch (error) {
-        // Silenciar erro para produção
-      } finally {
-        setIsAllM3UItemsLoading(false);
-      }
-    };
 
-    loadAllM3UItems();
-  }, []);
 
   const normalizeTitle = (title: string): string => {
     if (!title) return '';
@@ -114,7 +97,7 @@ export default function CorrectionPage() {
 
 
   const performSearch = useCallback(async (query: string, type: string) => {
-    if (isCacheLoading || isAllM3UItemsLoading || query.trim().length < 3) {
+    if (isCacheLoading || query.trim().length < 3) {
       setFilteredItems([]);
       return;
     }
@@ -165,7 +148,7 @@ export default function CorrectionPage() {
         }
     });
 
-  }, [allM3UItemsCache, isCacheLoading, isAllM3UItemsLoading]);
+  }, [allM3UItemsCache, isCacheLoading]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -200,9 +183,9 @@ export default function CorrectionPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10 text-lg py-6 rounded-full shadow-inner bg-card"
-                disabled={isCacheLoading || isAllM3UItemsLoading}
+                disabled={isCacheLoading}
               />
-               {(isLoading || isCacheLoading || isAllM3UItemsLoading) && (
+               {(isLoading || isCacheLoading) && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                 </div>
