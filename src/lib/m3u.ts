@@ -55,7 +55,7 @@ async function searchTmdbContent(name: string, type: 'movie' | 'tv'): Promise<{ 
 }
 
 // The server URL and credentials are now securely accessed from environment variables
-const API_URL = process.env.XUI_API_URL || 'http://dnscine.top';
+const API_URL = process.env.XUI_API_URL || 'https://dnscine.top';
 const USERNAME = process.env.XUI_USERNAME || 'Vodsm3u789DS';
 const PASSWORD = process.env.XUI_PASSWORD || 'w5NwV8dPXE';
 

@@ -30,7 +30,7 @@ export function ContentDetailsDialog({ item, open, onOpenChange }: ContentDetail
     
     setLoading(true);
     try {
-      const API_URL = process.env.XUI_API_URL || 'http://dnscine.top';
+      const API_URL = process.env.XUI_API_URL || 'https://dnscine.top';
       const USERNAME = process.env.XUI_USERNAME || 'Vodsm3u789DS';
       const PASSWORD = process.env.XUI_PASSWORD || 'w5NwV8dPXE';
       
