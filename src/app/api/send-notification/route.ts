@@ -6,7 +6,10 @@ export async function POST(request: NextRequest) {
   
   try {
     const { token, notification } = await request.json();
-    console.log('Dados recebidos:', { token: token ? 'presente' : 'ausente', notification });
+    console.log('Dados recebidos:', { 
+      token: token ? `${token.substring(0, 20)}...` : 'ausente', 
+      notification 
+    });
 
     if (!token || !notification) {
       console.log('Token ou notificação ausente');
@@ -16,7 +19,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validar formato do token FCM
+    if (typeof token !== 'string' || token.length < 100) {
+      console.log('Token FCM inválido:', { tokenLength: token?.length, tokenType: typeof token });
+      return NextResponse.json(
+        { error: 'Token FCM inválido' },
+        { status: 400 }
+      );
+    }
+
     console.log('Enviando notificação via Firebase Admin SDK...');
+    console.log('Token FCM (primeiros 50 chars):', token.substring(0, 50));
     
     // Enviar notificação diretamente via Firebase Admin SDK
     const response = await sendNotificationViaAdmin(token, notification);
@@ -26,8 +39,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, result: response });
   } catch (error) {
     console.error('Erro ao enviar notificação:', error);
+    
+    // Fornecer informações mais detalhadas sobre o erro
+    let errorMessage = 'Erro interno do servidor';
+    let errorDetails = 'Erro desconhecido';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack || 'Sem stack trace';
+    }
+    
+    // Verificar se é um erro específico do Firebase
+    if (errorMessage.includes('Requested entity was not found')) {
+      errorMessage = 'Token FCM inválido ou expirado';
+      errorDetails = 'O token FCM fornecido não foi encontrado no Firebase. Isso pode acontecer se o token foi invalidado ou expirou.';
+    }
+    
     return NextResponse.json(
-      { error: 'Erro interno do servidor', details: error instanceof Error ? error.message : 'Erro desconhecido' },
+      { 
+        error: errorMessage, 
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

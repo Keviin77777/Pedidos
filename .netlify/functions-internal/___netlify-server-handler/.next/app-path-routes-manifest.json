@@ -1,13 +1,18 @@
 {
-  "/(main)/comunicados/page": "/comunicados",
-  "/(main)/page": "/",
-  "/(main)/pedidos-adicionados/page": "/pedidos-adicionados",
   "/_not-found/page": "/_not-found",
+  "/api/send-notification/route": "/api/send-notification",
+  "/api/test-env/route": "/api/test-env",
+  "/api/test-firebase/route": "/api/test-firebase",
+  "/api/test-notification/route": "/api/test-notification",
   "/api/xtream-auth/route": "/api/xtream-auth",
   "/favicon.ico/route": "/favicon.ico",
   "/icon.svg/route": "/icon.svg",
-  "/icon/route": "/icon",
-  "/login.php/page": "/login.php",
   "/(main)/atualizacoes/page": "/atualizacoes",
-  "/(main)/correcao/page": "/correcao"
+  "/(main)/comunicados/page": "/comunicados",
+  "/(main)/page": "/",
+  "/(main)/pedidos-adicionados/page": "/pedidos-adicionados",
+  "/(main)/status-pedidos/page": "/status-pedidos",
+  "/(main)/correcao/page": "/correcao",
+  "/login.php/page": "/login.php",
+  "/icon/route": "/icon"
 }

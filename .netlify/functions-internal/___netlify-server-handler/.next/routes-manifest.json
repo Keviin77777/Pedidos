@@ -101,6 +101,12 @@
       "regex": "^/pedidos\\-adicionados(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/pedidos\\-adicionados(?:/)?$"
+    },
+    {
+      "page": "/status-pedidos",
+      "regex": "^/status\\-pedidos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/status\\-pedidos(?:/)?$"
     }
   ],
   "dataRoutes": [],

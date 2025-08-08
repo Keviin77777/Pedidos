@@ -1,13 +1,18 @@
 {
-  "/(main)/comunicados/page": "app/(main)/comunicados/page.js",
-  "/(main)/page": "app/(main)/page.js",
-  "/(main)/pedidos-adicionados/page": "app/(main)/pedidos-adicionados/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/send-notification/route": "app/api/send-notification/route.js",
+  "/api/test-env/route": "app/api/test-env/route.js",
+  "/api/test-firebase/route": "app/api/test-firebase/route.js",
+  "/api/test-notification/route": "app/api/test-notification/route.js",
   "/api/xtream-auth/route": "app/api/xtream-auth/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/icon.svg/route": "app/icon.svg/route.js",
-  "/icon/route": "app/icon/route.js",
-  "/login.php/page": "app/login.php/page.js",
   "/(main)/atualizacoes/page": "app/(main)/atualizacoes/page.js",
-  "/(main)/correcao/page": "app/(main)/correcao/page.js"
+  "/(main)/comunicados/page": "app/(main)/comunicados/page.js",
+  "/(main)/page": "app/(main)/page.js",
+  "/(main)/pedidos-adicionados/page": "app/(main)/pedidos-adicionados/page.js",
+  "/(main)/status-pedidos/page": "app/(main)/status-pedidos/page.js",
+  "/(main)/correcao/page": "app/(main)/correcao/page.js",
+  "/login.php/page": "app/login.php/page.js",
+  "/icon/route": "app/icon/route.js"
 }

@@ -200,6 +200,7 @@ const sendPushNotification = async (userId: string, notification: Omit<Notificat
     }
     
     console.log('Token FCM encontrado, enviando notificação...');
+    console.log('Token FCM (primeiros 30 chars):', tokenData.token.substring(0, 30));
     
     // Enviar notificação via FCM
     const response = await fetch('/api/send-notification', {
@@ -226,6 +227,47 @@ const sendPushNotification = async (userId: string, notification: Omit<Notificat
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
       console.error('Erro ao enviar notificação push:', errorData);
+      
+      // Se o token estiver inválido, tentar obter um novo
+      if (errorData.error && errorData.error.includes('Token FCM inválido')) {
+        console.log('Token FCM inválido, tentando obter novo token...');
+        try {
+          const newToken = await initializeMessaging();
+          if (newToken) {
+            await saveUserFCMToken(userId, newToken);
+            console.log('Novo token FCM obtido e salvo');
+            
+            // Tentar enviar novamente com o novo token
+            const retryResponse = await fetch('/api/send-notification', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                token: newToken,
+                notification: {
+                  title: notification.title,
+                  body: notification.body,
+                  data: {
+                    ...notification.data,
+                    type: notification.type,
+                    userId: notification.userId
+                  }
+                }
+              })
+            });
+            
+            if (retryResponse.ok) {
+              console.log('Notificação enviada com sucesso após renovar token');
+            } else {
+              console.error('Falha ao enviar notificação mesmo com novo token');
+            }
+          }
+        } catch (tokenError) {
+          console.error('Erro ao tentar obter novo token FCM:', tokenError);
+        }
+      }
+      
       // Não falhar se a notificação push não funcionar
       // A notificação local ainda será enviada
       return;
