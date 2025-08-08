@@ -173,7 +173,6 @@ export const saveUserFCMToken = async (userId: string, token: string) => {
       userId,
       lastUpdated: serverTimestamp(),
     }, { merge: true });
-    console.log(`FCM token salvo para usuário: ${userId}`);
   } catch (error) {
     console.error('Erro ao salvar FCM token do usuário:', error);
   }
@@ -182,25 +181,18 @@ export const saveUserFCMToken = async (userId: string, token: string) => {
 // Enviar notificação push via FCM
 const sendPushNotification = async (userId: string, notification: Omit<Notification, 'id' | 'createdAt'>) => {
   try {
-    console.log('Tentando enviar notificação push para usuário:', userId);
-    
     // Buscar o FCM token do usuário
     const tokenRef = doc(db, 'fcm-tokens', userId);
     const tokenDoc = await getDoc(tokenRef);
     
     if (!tokenDoc.exists()) {
-      console.log(`FCM token não encontrado para usuário: ${userId}`);
       return;
     }
     
     const tokenData = tokenDoc.data();
     if (!tokenData.token) {
-      console.log(`Token FCM vazio para usuário: ${userId}`);
       return;
     }
-    
-    console.log('Token FCM encontrado, enviando notificação...');
-    console.log('Token FCM (primeiros 30 chars):', tokenData.token.substring(0, 30));
     
     // Enviar notificação via FCM
     const response = await fetch('/api/send-notification', {
@@ -222,20 +214,15 @@ const sendPushNotification = async (userId: string, notification: Omit<Notificat
       })
     });
     
-    console.log('Resposta da API:', response.status, response.statusText);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-      console.error('Erro ao enviar notificação push:', errorData);
       
       // Se o token estiver inválido, tentar obter um novo
       if (errorData.error && errorData.error.includes('Token FCM inválido')) {
-        console.log('Token FCM inválido, tentando obter novo token...');
         try {
           const newToken = await initializeMessaging();
           if (newToken) {
             await saveUserFCMToken(userId, newToken);
-            console.log('Novo token FCM obtido e salvo');
             
             // Tentar enviar novamente com o novo token
             const retryResponse = await fetch('/api/send-notification', {
@@ -257,9 +244,7 @@ const sendPushNotification = async (userId: string, notification: Omit<Notificat
               })
             });
             
-            if (retryResponse.ok) {
-              console.log('Notificação enviada com sucesso após renovar token');
-            } else {
+            if (!retryResponse.ok) {
               console.error('Falha ao enviar notificação mesmo com novo token');
             }
           }
@@ -272,9 +257,6 @@ const sendPushNotification = async (userId: string, notification: Omit<Notificat
       // A notificação local ainda será enviada
       return;
     }
-    
-    const result = await response.json();
-    console.log('Notificação push enviada com sucesso:', result);
     
   } catch (error) {
     console.error('Erro ao enviar notificação push:', error);

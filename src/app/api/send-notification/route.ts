@@ -2,17 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendNotificationViaAdmin } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
-  console.log('API route /api/send-notification chamada');
-  
   try {
     const { token, notification } = await request.json();
-    console.log('Dados recebidos:', { 
-      token: token ? `${token.substring(0, 20)}...` : 'ausente', 
-      notification 
-    });
 
     if (!token || !notification) {
-      console.log('Token ou notificação ausente');
       return NextResponse.json(
         { error: 'Token e notificação são obrigatórios' },
         { status: 400 }
@@ -21,20 +14,14 @@ export async function POST(request: NextRequest) {
 
     // Validar formato do token FCM
     if (typeof token !== 'string' || token.length < 100) {
-      console.log('Token FCM inválido:', { tokenLength: token?.length, tokenType: typeof token });
       return NextResponse.json(
         { error: 'Token FCM inválido' },
         { status: 400 }
       );
     }
-
-    console.log('Enviando notificação via Firebase Admin SDK...');
-    console.log('Token FCM (primeiros 50 chars):', token.substring(0, 50));
     
     // Enviar notificação diretamente via Firebase Admin SDK
     const response = await sendNotificationViaAdmin(token, notification);
-    
-    console.log('Notificação enviada com sucesso via Admin SDK');
 
     return NextResponse.json({ success: true, result: response });
   } catch (error) {
@@ -68,7 +55,6 @@ export async function POST(request: NextRequest) {
 
 // Adicionar método GET para teste
 export async function GET() {
-  console.log('API route /api/send-notification GET chamada');
   return NextResponse.json({ 
     message: 'API route funcionando',
     timestamp: new Date().toISOString()
