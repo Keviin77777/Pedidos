@@ -287,8 +287,8 @@ export const saveNotification = async (notification: Omit<Notification, 'id' | '
         if (Notification.permission === 'granted') {
           await registration.showNotification(notification.title, {
             body: notification.body,
-            icon: '/favicon.ico',
-            badge: '/favicon.ico',
+            icon: '/cine-pulse-logo.svg',
+            badge: '/cine-pulse-logo.svg',
             data: {
               ...notification.data,
               type: notification.type,
@@ -577,32 +577,32 @@ export const notifyRequestDeleted = async (
 // Remover pedido do usuário
 export const deleteUserRequest = async (requestId: string): Promise<void> => {
   try {
-    // Buscar o documento na coleção user-requests pelo requestId
+    // 1. Deletar da coleção user-requests
     const userRequestsSnap = await getDocs(
-      query(userRequestsCollection, where('requestId', '==', requestId))
+      query(
+        collection(db, 'user-requests'), 
+        where('requestId', '==', requestId)
+      )
     );
     
-    if (userRequestsSnap.empty) {
-      console.warn(`Nenhum documento encontrado na coleção user-requests para requestId: ${requestId}`);
-      return;
-    }
-    
-    // Excluir todos os pedidos do usuário relacionados
     for (const userRequestDoc of userRequestsSnap.docs) {
       await deleteDoc(userRequestDoc.ref);
     }
     
-    // Também excluir o pedido da coleção content-requests (painel do admin)
-    try {
-      const contentRequestRef = doc(db, 'content-requests', requestId);
-      await deleteDoc(contentRequestRef);
-      console.log(`Pedido ${requestId} excluído da coleção content-requests`);
-    } catch (error) {
-      console.warn(`Erro ao excluir pedido ${requestId} da coleção content-requests:`, error);
-      // Não falha se não conseguir excluir do content-requests
+    // 2. Deletar da coleção content-requests
+    const contentRequestsSnap = await getDocs(
+      query(
+        collection(db, 'content-requests'), 
+        where('__name__', '==', requestId)
+      )
+    );
+    
+    for (const contentRequestDoc of contentRequestsSnap.docs) {
+      await deleteDoc(contentRequestDoc.ref);
     }
+    
   } catch (error) {
-    console.error('Erro ao excluir pedido do usuário:', error);
+    console.error('Erro ao deletar pedido do usuário:', error);
     throw error;
   }
 };

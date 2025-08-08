@@ -39,7 +39,7 @@ export const sendNotificationViaAdmin = async (token: string, notification: any)
       android: {
         priority: 'high' as const,
         notification: {
-          icon: '/favicon.ico',
+          icon: '/cine-pulse-logo.svg',
           color: '#FF0000',
         },
       },

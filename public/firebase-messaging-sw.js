@@ -22,21 +22,14 @@ messaging.onBackgroundMessage((payload) => {
   
   const notificationOptions = {
     body: notificationBody,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/cine-pulse-logo.svg',
+    badge: '/cine-pulse-logo.svg',
     data: payload.data || {},
     tag: 'pedidos-cine-notification',
     requireInteraction: true,
     actions: [
-      {
-        action: 'open',
-        title: 'Abrir',
-        icon: '/favicon.ico'
-      },
-      {
-        action: 'close',
-        title: 'Fechar'
-      }
+      { action: 'open', title: 'Abrir', icon: '/cine-pulse-logo.svg' },
+      { action: 'close', title: 'Fechar' }
     ],
     silent: false,
     vibrate: [200, 100, 200],
