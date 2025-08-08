@@ -1,0 +1,79 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pulseGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4C1D95;stop-opacity:1" />
+    </radialGradient>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0F0F23"/>
+  
+  <!-- Circuit board pattern -->
+  <g opacity="0.3">
+    <path d="M50 100 L150 100 L150 120 L50 120 Z" fill="#8B5CF6"/>
+    <path d="M300 150 L400 150 L400 170 L300 170 Z" fill="#F59E0B"/>
+    <circle cx="100" cy="200" r="5" fill="#8B5CF6"/>
+    <circle cx="400" cy="300" r="5" fill="#F59E0B"/>
+    <path d="M200 50 L220 50 L220 100 L200 100 Z" fill="#8B5CF6"/>
+  </g>
+  
+  <!-- Golden ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="url(#goldGradient)" stroke-width="8" filter="url(#glow)"/>
+  
+  <!-- Pulse waveform -->
+  <g filter="url(#glow)">
+    <path d="M76 256 Q126 206 176 256 Q226 306 276 256 Q326 206 376 256 Q426 306 476 256" 
+          stroke="#FFFFFF" stroke-width="4" fill="none" opacity="0.8"/>
+    <path d="M76 256 Q126 306 176 256 Q226 206 276 256 Q326 306 376 256 Q426 206 476 256" 
+          stroke="#8B5CF6" stroke-width="3" fill="none" opacity="0.6"/>
+  </g>
+  
+  <!-- Character body -->
+  <ellipse cx="256" cy="280" rx="60" ry="80" fill="#F3F4F6"/>
+  
+  <!-- Character head -->
+  <circle cx="256" cy="200" r="50" fill="#F3F4F6"/>
+  
+  <!-- Character ears -->
+  <circle cx="230" cy="170" r="20" fill="#F3F4F6"/>
+  <circle cx="282" cy="170" r="20" fill="#F3F4F6"/>
+  
+  <!-- Purple mask/visor -->
+  <ellipse cx="256" cy="200" rx="35" ry="25" fill="#8B5CF6"/>
+  
+  <!-- Yellow eyes -->
+  <ellipse cx="245" cy="195" rx="8" ry="12" fill="#FCD34D"/>
+  <ellipse cx="267" cy="195" rx="8" ry="12" fill="#FCD34D"/>
+  
+  <!-- Pink pupils -->
+  <circle cx="245" cy="195" r="3" fill="#EC4899"/>
+  <circle cx="267" cy="195" r="3" fill="#EC4899"/>
+  
+  <!-- Arms -->
+  <ellipse cx="200" cy="300" rx="15" ry="40" fill="#F3F4F6" transform="rotate(-20 200 300)"/>
+  <ellipse cx="312" cy="300" rx="15" ry="40" fill="#F3F4F6" transform="rotate(20 312 300)"/>
+  
+  <!-- Purple cylinders -->
+  <rect x="190" y="250" width="20" height="60" rx="10" fill="#8B5CF6"/>
+  <rect x="302" y="250" width="20" height="60" rx="10" fill="#8B5CF6"/>
+  
+  <!-- Play button at intersection -->
+  <circle cx="256" cy="280" r="15" fill="#8B5CF6"/>
+  <polygon points="250,275 250,285 260,280" fill="#FCD34D"/>
+  
+  <!-- Text banner -->
+  <rect x="156" y="380" width="200" height="40" rx="20" fill="#1F2937" stroke="#8B5CF6" stroke-width="2"/>
+  <text x="256" y="405" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="bold">CINE PULSE</text>
+</svg> 

@@ -11,11 +11,20 @@ import {
   Timestamp,
   serverTimestamp,
   query,
+  where,
   orderBy,
   onSnapshot,
   getDocs,
   CollectionReference,
 } from 'firebase/firestore';
+import {
+  notifyRequestAdded,
+  notifyRequestCommunication,
+  notifyRequestStatusChange,
+  notifyRequestDeleted,
+  saveUserRequestStatus,
+  updateUserRequestStatus,
+} from './notifications';
 
 // ======== TYPES ========
 
@@ -68,8 +77,18 @@ const createOnSnapshotListener = <T extends { reportedAt: string } | { requested
       const id = doc.id;
       // Convert Firestore Timestamp to ISO string
       const timestamp = (data[orderByField] as Timestamp).toDate().toISOString();
-      items.push({ ...data, id, [orderByField]: timestamp } as T);
+      const item = { ...data, id, [orderByField]: timestamp } as unknown as T;
+      
+      // Se for ContentRequest, converter updatedAt também
+      if ('updatedAt' in data && data.updatedAt) {
+        (item as any).updatedAt = (data.updatedAt as Timestamp).toDate().toISOString();
+      }
+      
+      items.push(item);
     });
+    
+
+    
     setData(items);
   }, (error) => {
     // Error listening to collection
@@ -103,7 +122,22 @@ export const saveContentRequest = async (request: Omit<ContentRequest, 'id' | 'r
     requestedAt: Timestamp.now(),
     status: 'Pendente',
   };
-  await addDoc(requestsCollection, newRequest);
+  
+  const docRef = await addDoc(requestsCollection, newRequest);
+  
+  // Salvar status do pedido do usuário
+  if (request.username) {
+    await saveUserRequestStatus({
+      userId: request.username,
+      requestId: docRef.id,
+      requestTitle: request.title,
+      status: 'Pendente',
+      requestedAt: new Date().toISOString(),
+    });
+    
+    // Notificar mudança de status
+    await notifyRequestStatusChange(request.username, request.title, 'Pendente');
+  }
 };
 
 export const updateContentRequestStatus = async (id: string, status: 'Pendente'): Promise<void> => {
@@ -115,19 +149,69 @@ export const markRequestAsAdded = async (id: string, category: string, observati
   const requestDoc = doc(db, 'content-requests', id);
   const updateData: any = { 
     status: 'Adicionado', 
-    addedToCategory: category 
+    addedToCategory: category,
+    updatedAt: Timestamp.now()
   };
   
   if (observation && observation.trim()) {
     updateData.addedObservation = observation.trim();
   }
   
-  await updateDoc(requestDoc, updateData);
+  try {
+    // Obter dados do pedido antes de atualizar
+    const requestSnap = await getDocs(query(requestsCollection, where('__name__', '==', id)));
+    const requestData = requestSnap.docs[0]?.data();
+    
+    await updateDoc(requestDoc, updateData);
+    
+    // Atualizar status do pedido do usuário e enviar notificação
+    if (requestData?.username) {
+      await updateUserRequestStatus(id, 'Adicionado', {
+        addedToCategory: category,
+        addedObservation: observation?.trim(),
+      });
+      
+      // Notificar que o pedido foi adicionado
+      await notifyRequestAdded(requestData.username, requestData.title, category);
+    }
+  } catch (error) {
+    console.error('Error marking as added:', error);
+    throw error;
+  }
 }
 
 export const deleteContentRequest = async (id: string): Promise<void> => {
+  try {
+    // Obter dados do pedido antes de excluir
+    const requestSnap = await getDocs(query(requestsCollection, where('__name__', '==', id)));
+    const requestData = requestSnap.docs[0]?.data();
+    
+    // Excluir o pedido principal
     const requestDoc = doc(db, 'content-requests', id);
     await deleteDoc(requestDoc);
+    
+    // Excluir o pedido do usuário e enviar notificação
+    if (requestData?.username) {
+      // Excluir da coleção user-requests
+      const userRequestsSnap = await getDocs(
+        query(
+          collection(db, 'user-requests'), 
+          where('requestId', '==', id)
+        )
+      );
+      
+      // Excluir todos os pedidos do usuário relacionados
+      for (const userRequestDoc of userRequestsSnap.docs) {
+        await deleteDoc(userRequestDoc.ref);
+      }
+      
+      // Enviar notificação de exclusão
+      await notifyRequestDeleted(requestData.username, requestData.title);
+    }
+  } catch (error) {
+    console.error('Error deleting request:', error);
+    throw error;
+  }
 };
 
 
@@ -154,11 +238,31 @@ export const deleteProblemReport = async (id: string): Promise<void> => {
 
 export const markRequestAsCommunicated = async (id: string, message: string): Promise<void> => {
   const docRef = doc(db, 'content-requests', id);
-  await updateDoc(docRef, {
-    status: 'Comunicado',
-    communicatedMessage: message,
-    communicatedAt: serverTimestamp(),
-  });
+  
+  try {
+    // Obter dados do pedido antes de atualizar
+    const requestSnap = await getDocs(query(requestsCollection, where('__name__', '==', id)));
+    const requestData = requestSnap.docs[0]?.data();
+    
+    await updateDoc(docRef, {
+      status: 'Comunicado',
+      communicatedMessage: message,
+      communicatedAt: serverTimestamp(),
+    });
+    
+    // Atualizar status do pedido do usuário e enviar notificação
+    if (requestData?.username) {
+      await updateUserRequestStatus(id, 'Comunicado', {
+        communicatedMessage: message,
+      });
+      
+      // Notificar comunicação sobre o pedido
+      await notifyRequestCommunication(requestData.username, requestData.title, message);
+    }
+  } catch (error) {
+    console.error('Error marking as communicated:', error);
+    throw error;
+  }
 };
 
 export const updateRequestObservation = async (id: string, observation: string): Promise<void> => {
@@ -168,3 +272,5 @@ export const updateRequestObservation = async (id: string, observation: string):
     updatedAt: serverTimestamp(),
   });
 };
+
+

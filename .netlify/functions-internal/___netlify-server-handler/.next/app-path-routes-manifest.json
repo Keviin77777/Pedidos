@@ -1,0 +1,13 @@
+{
+  "/(main)/comunicados/page": "/comunicados",
+  "/(main)/page": "/",
+  "/(main)/pedidos-adicionados/page": "/pedidos-adicionados",
+  "/_not-found/page": "/_not-found",
+  "/api/xtream-auth/route": "/api/xtream-auth",
+  "/favicon.ico/route": "/favicon.ico",
+  "/icon.svg/route": "/icon.svg",
+  "/icon/route": "/icon",
+  "/login.php/page": "/login.php",
+  "/(main)/atualizacoes/page": "/atualizacoes",
+  "/(main)/correcao/page": "/correcao"
+}

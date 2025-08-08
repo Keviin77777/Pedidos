@@ -129,7 +129,7 @@ export function ContentDetailsDialog({ item, open, onOpenChange }: ContentDetail
 
   const getMainCast = () => {
     if (!tmdbDetails?.actors) return [];
-    return tmdbDetails.actors.split(',').slice(0, 5).map((actor, index) => ({
+    return tmdbDetails.actors.split(',').slice(0, 5).map((actor: string, index: number) => ({
       id: index,
       name: actor.trim(),
       character: ''
@@ -138,7 +138,7 @@ export function ContentDetailsDialog({ item, open, onOpenChange }: ContentDetail
 
   const getGenres = () => {
     if (!tmdbDetails?.genre) return [];
-    return tmdbDetails.genre.split(',').map(genre => genre.trim());
+    return tmdbDetails.genre.split(',').map((genre: string) => genre.trim());
   };
 
   const getRating = () => {

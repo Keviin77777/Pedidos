@@ -3,16 +3,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Wrench, Ticket, Sparkles, LogOut, User, RefreshCw } from 'lucide-react';
+import { Home, Wrench, Ticket, Sparkles, LogOut, User, RefreshCw, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useXtream } from '@/contexts/XtreamContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { UserInfoDialog } from '@/components/user-info-dialog';
+import { UserRequestStatus } from '@/components/user-request-status';
 
 const navItems = [
   { href: '/', label: 'Solicitação de Conteudos', icon: Home },
   { href: '/pedidos-adicionados', label: 'Pedidos Adicionados', icon: Sparkles },
+  { href: '/status-pedidos', label: 'Status dos Pedidos', icon: ClipboardList },
   { href: '/comunicados', label: 'Comunicado Conteudos', icon: Ticket },
   { href: '/atualizacoes', label: 'Atualização de Conteúdo', icon: RefreshCw },
   { href: '/correcao', label: 'Correção de conteudos', icon: Wrench },
@@ -44,7 +46,7 @@ const Sidebar = () => {
     <aside className="w-64 flex-shrink-0 bg-card border-r flex flex-col">
       <div className="h-16 flex items-center px-6 border-b">
         <Ticket className="w-8 h-8 mr-3 text-primary" />
-        <h1 className="text-xl font-bold tracking-tight">Pedidos Cine</h1>
+        <h1 className="text-xl font-bold tracking-tight lg:hidden">Pedidos Cine</h1>
       </div>
       <nav className="flex-grow px-4 py-6">
         <ul className="space-y-2">
@@ -86,6 +88,11 @@ const Sidebar = () => {
             </UserInfoDialog>
           </div>
         )}
+        
+
+        
+        {/* Status dos Pedidos */}
+        <UserRequestStatus />
         
         <Button
           variant="outline"

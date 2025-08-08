@@ -18,7 +18,16 @@ export default function AddedItemsPage() {
   useEffect(() => {
     const unsubscribe = onRequestsUpdated(
       (allRequests) => {
-        setAddedItems(allRequests.filter((req) => req.status === 'Adicionado'));
+        const addedRequests = allRequests.filter((req) => req.status === 'Adicionado');
+        
+        // Ordenar por updatedAt (quando foi adicionado) ou requestedAt como fallback
+        const sortedAddedRequests = addedRequests.sort((a, b) => {
+          const aDate = a.updatedAt ? new Date(a.updatedAt) : new Date(a.requestedAt);
+          const bDate = b.updatedAt ? new Date(b.updatedAt) : new Date(b.requestedAt);
+          return bDate.getTime() - aDate.getTime(); // Mais recente primeiro
+        });
+        
+        setAddedItems(sortedAddedRequests);
         setIsLoading(false);
       },
       (error) => {
@@ -65,7 +74,7 @@ export default function AddedItemsPage() {
                     <ContentCard
                       item={{
                         name: item.title,
-                        logo: item.logo,
+                        logo: item.logo || null,
                         category: item.type,
                         url: '',
                         synopsis: `Pedido em: ${new Date(item.requestedAt).toLocaleDateString()}`,
